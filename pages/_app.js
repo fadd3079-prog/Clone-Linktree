@@ -8,6 +8,7 @@ import { darkTheme, lightTheme } from "../styles/theme.config";
 import { GoogleAnalytics } from "nextjs-google-analytics";
 import { DefaultSeo } from 'next-seo';
 import SEO from '../next-seo.config';
+import { SessionProvider } from "next-auth/react";
 
 const darkModeConfig = {
     classNameDark: 'dark-mode',
@@ -15,7 +16,7 @@ const darkModeConfig = {
     storageKey: 'darkMode',
 };
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     const darkMode = useDarkMode(false, darkModeConfig);
     const [isMounted, setIsMounted] = useState(false);
 
@@ -26,7 +27,7 @@ function MyApp({ Component, pageProps }) {
     }, []);
 
     return (
-        <>
+        <SessionProvider session={session}>
             <GoogleAnalytics />
             <ThemeProvider theme={theme}>
                 <Head>
@@ -64,7 +65,7 @@ function MyApp({ Component, pageProps }) {
                     {isMounted && <Component {...pageProps} />}
                 </Layout>
             </ThemeProvider>
-        </>
+        </SessionProvider>
     );
 }
 

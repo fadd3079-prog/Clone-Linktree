@@ -1,13 +1,45 @@
 // Weblinks Page Sections
 // Fadd Graphics Official Directory
 
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Container } from "./ReusableStyles";
 import { HexIcon, NewUp, OvalIcon } from './icons';
-import allLinks from "../data/LinksData";
+import defaultLinks from "../data/LinksData";
 import bioData from "../data/BioData";
 
-const Links = () => {
+const Links = ({ initialLinks }) => {
+  const [linksList, setLinksList] = useState(initialLinks || defaultLinks);
+
+  // Fetch updated links from MongoDB API
+  useEffect(() => {
+    fetch("/api/links")
+      .then(res => res.json())
+      .then(json => {
+        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
+          setLinksList(json.data);
+        }
+      })
+      .catch(err => console.error("Links fetch fallback:", err));
+  }, []);
+
+  // Track click event asynchronously
+  const handleLinkClick = (link) => {
+    try {
+      fetch("/api/click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          linkId: link._id || null,
+          title: link.title,
+          url: link.url
+        })
+      }).catch(() => {});
+    } catch (e) {
+      // Non-blocking
+    }
+  };
+
   // all user info from bioData
   const name = bioData[0].name;
   const url = bioData[0].url;
@@ -33,10 +65,10 @@ const Links = () => {
   const newProductUrl = bioData[0].newProductUrl;
 
   // Filter top social links
-  const social = allLinks.filter((el) => el.type === "social" && el.on);
+  const social = linksList.filter((el) => el.type === "social" && el.on !== false);
 
   // Filter categorized links
-  const nonSocialLinks = allLinks.filter((el) => el.type !== "social" && el.on);
+  const nonSocialLinks = linksList.filter((el) => el.type !== "social" && el.on !== false);
   const categories = Array.from(new Set(nonSocialLinks.map((el) => el.type)));
 
   return (
@@ -88,10 +120,11 @@ const Links = () => {
                   {social.map((i) => (
                     <a
                       href={i.url}
-                      key={i.title}
+                      key={i._id || i.title}
                       target="_blank"
                       rel="noreferrer"
                       title={i.title}
+                      onClick={() => handleLinkClick(i)}
                     >
                       <SocialIconBox>
                         <img
@@ -116,9 +149,10 @@ const Links = () => {
                   {sectionLinks.map((i) => (
                     <a
                       href={i.url}
-                      key={i.title}
+                      key={i._id || i.title}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={() => handleLinkClick(i)}
                     >
                       <LinkBox className={i.featured ? 'featured' : ''}>
                         <LinkLeft>
