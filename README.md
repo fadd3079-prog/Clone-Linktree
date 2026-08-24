@@ -1,9 +1,5 @@
 # Fadd Links
 
-Minimalist, Apple-inspired bio link directory for **Mufaddhol (Fadd Graphics)**. Built with Next.js and Styled Components.
-
----
-
 ## Quick Start
 
 ```bash
@@ -16,8 +12,6 @@ npm run dev
 # Build for production
 npm run build
 ```
-
-Open [http://localhost:3000](http://localhost:3000) to view the site.
 
 ---
 
