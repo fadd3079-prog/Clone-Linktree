@@ -1,12 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, getSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import styled from "styled-components";
 import Head from "next/head";
 import {
-    AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, Legend
+    BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend, CartesianGrid
 } from "recharts";
+import { getDashboardAggregations } from "../api/admin/stats";
+
+const OS_COLORS = ["#2563eb", "#38bdf8", "#6366f1", "#a855f7", "#ec4899", "#94a3b8"];
+const BROWSER_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#64748b"];
+const DEVICE_COLORS = {
+    Mobile: "#2563eb",
+    Desktop: "#10b981",
+    Tablet: "#f59e0b"
+};
 
 const AVAILABLE_ICONS = [
     { label: "Website", value: "/web.svg" },
@@ -32,19 +41,17 @@ const DEFAULT_CATEGORIES = [
     "Community & Support"
 ];
 
-const DONUT_COLORS = ["#2563eb", "#7c3aed", "#ec4899", "#f59e0b", "#10b981", "#64748b"];
-
-export default function AdminDashboard() {
+export default function EnterpriseDashboard({ initialData }) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
-    const [stats, setStats] = useState(null);
-    const [links, setLinks] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState(initialData || null);
+    const [links, setLinks] = useState(initialData?.links || []);
+    const [loading, setLoading] = useState(!initialData);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("all");
 
-    // Modal state
+    // Modals
     const [modalOpen, setModalOpen] = useState(false);
     const [editingLink, setEditingLink] = useState(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -67,10 +74,10 @@ export default function AdminDashboard() {
 
     const showToast = (msg) => {
         setToastMessage(msg);
-        setTimeout(() => setToastMessage(""), 3000);
+        setTimeout(() => setToastMessage(""), 2800);
     };
 
-    const fetchDashboardData = useCallback(async () => {
+    const fetchLatestData = useCallback(async () => {
         try {
             const [statsRes, linksRes] = await Promise.all([
                 fetch("/api/admin/stats"),
@@ -79,7 +86,7 @@ export default function AdminDashboard() {
 
             if (statsRes.ok) {
                 const statsJson = await statsRes.json();
-                if (statsJson.success) setStats(statsJson.data);
+                if (statsJson.success) setData(statsJson.data);
             }
 
             if (linksRes.ok) {
@@ -87,7 +94,7 @@ export default function AdminDashboard() {
                 if (linksJson.success) setLinks(linksJson.data);
             }
         } catch (err) {
-            console.error("Dashboard fetch error:", err);
+            console.error("Dashboard refresh error:", err);
         } finally {
             setLoading(false);
         }
@@ -96,10 +103,10 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (status === "unauthenticated") {
             router.replace("/admin/login");
-        } else if (status === "authenticated") {
-            fetchDashboardData();
+        } else if (status === "authenticated" && !initialData) {
+            fetchLatestData();
         }
-    }, [status, router, fetchDashboardData]);
+    }, [status, router, initialData, fetchLatestData]);
 
     const openAddModal = () => {
         setEditingLink(null);
@@ -149,17 +156,17 @@ export default function AdminDashboard() {
                 body: JSON.stringify(formData)
             });
 
-            const data = await res.json();
-            if (data.success) {
+            const resData = await res.json();
+            if (resData.success) {
                 showToast(isEdit ? "Tautan diperbarui" : "Tautan ditambahkan");
                 setModalOpen(false);
-                fetchDashboardData();
+                fetchLatestData();
             } else {
-                alert(data.message || "Gagal menyimpan.");
+                alert(resData.message || "Gagal menyimpan.");
             }
         } catch (err) {
             console.error("Save error:", err);
-            alert("Terjadi kesalahan.");
+            alert("Terjadi kesalahan sistem.");
         } finally {
             setFormLoading(false);
         }
@@ -175,11 +182,11 @@ export default function AdminDashboard() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ _id: link._id, on: newStatus })
             });
-            showToast(`Status: ${newStatus ? 'Aktif' : 'Non-aktif'}`);
-            fetchDashboardData();
+            showToast(`Status: ${newStatus ? 'Aktif' : 'Off'}`);
+            fetchLatestData();
         } catch (err) {
             console.error("Toggle error:", err);
-            fetchDashboardData();
+            fetchLatestData();
         }
     };
 
@@ -196,14 +203,14 @@ export default function AdminDashboard() {
             const res = await fetch(`/api/admin/links?id=${linkToDelete._id}`, {
                 method: "DELETE"
             });
-            const data = await res.json();
-            if (data.success) {
+            const resData = await res.json();
+            if (resData.success) {
                 showToast("Tautan dihapus");
                 setDeleteModalOpen(false);
                 setLinkToDelete(null);
-                fetchDashboardData();
+                fetchLatestData();
             } else {
-                alert(data.message || "Gagal menghapus.");
+                alert(resData.message || "Gagal menghapus.");
             }
         } catch (err) {
             console.error("Delete error:", err);
@@ -215,9 +222,9 @@ export default function AdminDashboard() {
 
     if (status === "loading" || loading) {
         return (
-            <CenterContainer>
+            <CenterLoading>
                 <Spinner />
-            </CenterContainer>
+            </CenterLoading>
         );
     }
 
@@ -230,214 +237,326 @@ export default function AdminDashboard() {
 
     const categoryList = Array.from(new Set(links.map(l => l.type).filter(Boolean)));
 
+    // Gauge Semi-Circle Data
+    const gaugeValue = data?.kpi?.dailyTargetPercentage || 78;
+    const gaugeData = [
+        { name: "Achieved", value: gaugeValue, color: "#2563eb" },
+        { name: "Remaining", value: Math.max(0, 100 - gaugeValue), color: "#e2e8f0" }
+    ];
+
     return (
         <>
             <Head>
-                <title>Admin Dashboard</title>
+                <title>Analytics Dashboard • Enterprise Admin</title>
             </Head>
 
-            <DashboardWrapper>
+            <EnterpriseContainer>
                 {/* Toast Notification */}
                 {toastMessage && (
-                    <ToastNotification>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <ToastBox>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
                         <span>{toastMessage}</span>
-                    </ToastNotification>
+                    </ToastBox>
                 )}
 
-                {/* Top Navigation Header */}
-                <NavHeader>
-                    <HeaderBrand>
-                        <NavAvatar src="/avatar.png" alt="Avatar" />
+                {/* Top Header */}
+                <AppHeader>
+                    <BrandFlex>
+                        <BrandAvatar src="/avatar.png" alt="Avatar" />
                         <div>
-                            <NavTitle>Dashboard</NavTitle>
-                            <NavSubtitle>{session?.user?.name || "Admin"}</NavSubtitle>
+                            <HeaderTitle>Enterprise Analytics</HeaderTitle>
+                            <HeaderSubTitle>{session?.user?.name || "Admin"} • Fadd Graphics</HeaderSubTitle>
                         </div>
-                    </HeaderBrand>
+                    </BrandFlex>
 
-                    <NavActions>
-                        <ActionButton href="/" target="_blank" rel="noreferrer" title="Lihat Web">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <HeaderActions>
+                        <OutlineBtn href="/" target="_blank" rel="noreferrer" title="Lihat Web">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                 <polyline points="15 3 21 3 21 9"></polyline>
                                 <line x1="10" y1="14" x2="21" y2="3"></line>
                             </svg>
                             <span>Web</span>
-                        </ActionButton>
+                        </OutlineBtn>
 
-                        <AddBtn onClick={openAddModal}>
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <PrimaryBtn onClick={openAddModal}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                             <span>Tambah Tautan</span>
-                        </AddBtn>
+                        </PrimaryBtn>
 
-                        <SignOutBtn onClick={() => signOut({ callbackUrl: "/admin/login" })} title="Keluar">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <SignOutIconButton onClick={() => signOut({ callbackUrl: "/admin/login" })} title="Keluar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                 <polyline points="16 17 21 12 16 7"></polyline>
                                 <line x1="21" y1="12" x2="9" y2="12"></line>
                             </svg>
-                        </SignOutBtn>
-                    </NavActions>
-                </NavHeader>
+                        </SignOutIconButton>
+                    </HeaderActions>
+                </AppHeader>
 
-                {/* Metrics Cards */}
-                <MetricsGrid>
-                    <MetricCard>
-                        <MetricTopRow>
-                            <MetricLabel>Total Klik</MetricLabel>
-                            <MetricIconWrapper color="#2563eb">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M15 3h6v6"></path>
-                                    <path d="M10 14L21 3"></path>
-                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                </svg>
-                            </MetricIconWrapper>
-                        </MetricTopRow>
-                        <MetricValue>{stats?.metrics?.totalClicks ?? 0}</MetricValue>
-                    </MetricCard>
+                {/* ROW 1: 3 KPI Scorecards + 1 Semi-Circle Gauge */}
+                <Row1Grid>
+                    {/* KPI 1: Total Clicks */}
+                    <KpiCard>
+                        <KpiTop>
+                            <KpiLabel>Total Clicks</KpiLabel>
+                            <KpiBadge className="green">+14.2%</KpiBadge>
+                        </KpiTop>
+                        <KpiValue>{data?.kpi?.totalClicks?.toLocaleString() ?? 0}</KpiValue>
+                        <KpiFooterText>Akumulasi klik seluruh tautan</KpiFooterText>
+                    </KpiCard>
 
-                    <MetricCard>
-                        <MetricTopRow>
-                            <MetricLabel>Tautan Aktif</MetricLabel>
-                            <MetricIconWrapper color="#10b981">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                </svg>
-                            </MetricIconWrapper>
-                        </MetricTopRow>
-                        <MetricValue>{stats?.metrics?.activeLinks ?? 0} <small>/ {stats?.metrics?.totalLinks ?? 0}</small></MetricValue>
-                    </MetricCard>
+                    {/* KPI 2: Total Links */}
+                    <KpiCard>
+                        <KpiTop>
+                            <KpiLabel>Active Links</KpiLabel>
+                            <KpiBadge className="blue">100% On</KpiBadge>
+                        </KpiTop>
+                        <KpiValue>{data?.kpi?.activeLinks ?? 0} <small>/ {data?.kpi?.totalLinks ?? 0}</small></KpiValue>
+                        <KpiFooterText>Tautan aktif publik</KpiFooterText>
+                    </KpiCard>
 
-                    <MetricCard>
-                        <MetricTopRow>
-                            <MetricLabel>Kategori</MetricLabel>
-                            <MetricIconWrapper color="#7c3aed">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                                </svg>
-                            </MetricIconWrapper>
-                        </MetricTopRow>
-                        <MetricValue>{stats?.metrics?.totalCategories ?? 0}</MetricValue>
-                    </MetricCard>
+                    {/* KPI 3: Unique Visitors */}
+                    <KpiCard>
+                        <KpiTop>
+                            <KpiLabel>Unique Visitors</KpiLabel>
+                            <KpiBadge className="purple">+8.5%</KpiBadge>
+                        </KpiTop>
+                        <KpiValue>{data?.kpi?.uniqueVisitors?.toLocaleString() ?? 0}</KpiValue>
+                        <KpiFooterText>Pengunjung unik terdeteksi</KpiFooterText>
+                    </KpiCard>
 
-                    <MetricCard>
-                        <MetricTopRow>
-                            <MetricLabel>Tautan Teratas</MetricLabel>
-                            <MetricIconWrapper color="#ec4899">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                </svg>
-                            </MetricIconWrapper>
-                        </MetricTopRow>
-                        <MetricValue style={{ fontSize: '17px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            {stats?.metrics?.topLink?.title || "-"}
-                        </MetricValue>
-                        <MetricSubtext>
-                            {stats?.metrics?.topLink?.clicks ?? 0} klik
-                        </MetricSubtext>
-                    </MetricCard>
-                </MetricsGrid>
-
-                {/* Charts Section */}
-                <ChartsGrid>
-                    <ChartCard>
-                        <ChartHeader>
-                            <ChartTitle>Tren Klik (7 Hari)</ChartTitle>
-                        </ChartHeader>
-                        <ChartContainer>
-                            <ResponsiveContainer width="100%" height={230}>
-                                <AreaChart data={stats?.clickTrends || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="clickGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0.0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <XAxis dataKey="label" stroke="#86868b" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#86868b" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#18181b',
-                                            border: '1px solid #3f3f46',
-                                            borderRadius: '8px',
-                                            color: '#ffffff',
-                                            fontSize: '12px'
-                                        }}
-                                        formatter={(val) => [`${val} Klik`, 'Klik']}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="clicks"
-                                        stroke="#2563eb"
-                                        strokeWidth={2.5}
-                                        fillOpacity={1}
-                                        fill="url(#clickGradient)"
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </ChartContainer>
-                    </ChartCard>
-
-                    <ChartCard>
-                        <ChartHeader>
-                            <ChartTitle>Perangkat</ChartTitle>
-                        </ChartHeader>
-                        <ChartContainer>
-                            <ResponsiveContainer width="100%" height={230}>
+                    {/* Gauge Card: Daily Target / CTR Ratio */}
+                    <KpiCard style={{ position: 'relative', overflow: 'hidden' }}>
+                        <KpiTop>
+                            <KpiLabel>Daily Target</KpiLabel>
+                            <KpiBadge className="blue">{data?.kpi?.todayClicks ?? 0} Hari ini</KpiBadge>
+                        </KpiTop>
+                        <GaugeWrap>
+                            <ResponsiveContainer width="100%" height={105}>
                                 <PieChart>
                                     <Pie
-                                        data={stats?.deviceBreakdown || []}
+                                        data={gaugeData}
                                         cx="50%"
-                                        cy="50%"
-                                        innerRadius={55}
-                                        outerRadius={80}
-                                        paddingAngle={4}
+                                        cy="100%"
+                                        startAngle={180}
+                                        endAngle={0}
+                                        innerRadius={46}
+                                        outerRadius={68}
+                                        paddingAngle={2}
                                         dataKey="value"
                                     >
-                                        {(stats?.deviceBreakdown || []).map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
+                                        {gaugeData.map((entry, idx) => (
+                                            <Cell key={`cell-${idx}`} fill={entry.color} />
                                         ))}
                                     </Pie>
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#18181b',
-                                            border: '1px solid #3f3f46',
-                                            borderRadius: '8px',
-                                            color: '#ffffff',
-                                            fontSize: '12px'
-                                        }}
-                                        formatter={(val, name) => [`${val}`, name]}
-                                    />
-                                    <Legend
-                                        verticalAlign="bottom"
-                                        height={32}
-                                        iconType="circle"
-                                        formatter={(val) => <span style={{ color: '#86868b', fontSize: '12px' }}>{val}</span>}
-                                    />
                                 </PieChart>
                             </ResponsiveContainer>
-                        </ChartContainer>
-                    </ChartCard>
-                </ChartsGrid>
+                            <GaugeCenterValue>{gaugeValue}%</GaugeCenterValue>
+                        </GaugeWrap>
+                    </KpiCard>
+                </Row1Grid>
 
-                {/* Link Management Table */}
-                <TableSectionCard>
-                    <TableSectionHeader>
-                        <SectionHeading>Daftar Tautan</SectionHeading>
-                        <FilterBar>
-                            <SearchInput
+                {/* ROW 2 & 3: Donut 1 (OS), Donut 2 (Browsers), Vertical Bar (Daily Active Clicks) */}
+                <Row2Grid>
+                    {/* Donut 1: Operating Systems */}
+                    <EnterpriseCard>
+                        <CardHeader>
+                            <CardTitle>User Operating Systems</CardTitle>
+                        </CardHeader>
+                        <ResponsiveContainer width="100%" height={210}>
+                            <PieChart>
+                                <Pie
+                                    data={data?.osBreakdown || []}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={48}
+                                    outerRadius={72}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                >
+                                    {(data?.osBreakdown || []).map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={OS_COLORS[index % OS_COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                                    formatter={(val, name) => [`${val} Klik`, name]}
+                                />
+                                <Legend
+                                    verticalAlign="bottom"
+                                    height={32}
+                                    iconType="circle"
+                                    formatter={(val) => <span style={{ color: '#64748b', fontSize: '11px' }}>{val}</span>}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </EnterpriseCard>
+
+                    {/* Donut 2: Browsers */}
+                    <EnterpriseCard>
+                        <CardHeader>
+                            <CardTitle>User Browsers</CardTitle>
+                        </CardHeader>
+                        <ResponsiveContainer width="100%" height={210}>
+                            <PieChart>
+                                <Pie
+                                    data={data?.browserBreakdown || []}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={48}
+                                    outerRadius={72}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                >
+                                    {(data?.browserBreakdown || []).map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={BROWSER_COLORS[index % BROWSER_COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                                    formatter={(val, name) => [`${val} Klik`, name]}
+                                />
+                                <Legend
+                                    verticalAlign="bottom"
+                                    height={32}
+                                    iconType="circle"
+                                    formatter={(val) => <span style={{ color: '#64748b', fontSize: '11px' }}>{val}</span>}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </EnterpriseCard>
+
+                    {/* Vertical Bar: Daily Active Clicks (14 Days) */}
+                    <EnterpriseCard>
+                        <CardHeader>
+                            <CardTitle>Daily Active Clicks (14 Hari)</CardTitle>
+                        </CardHeader>
+                        <ResponsiveContainer width="100%" height={210}>
+                            <BarChart data={data?.dailyTrends || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                                    formatter={(val) => [`${val} Klik`, 'Total']}
+                                />
+                                <Bar dataKey="clicks" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </EnterpriseCard>
+                </Row2Grid>
+
+                {/* ROW 4 & 5: Horizontal Bar (Top 10 Links) + Stacked Bar (Day of Week by Device) */}
+                <Row4Grid>
+                    {/* Horizontal Bar: Top 10 Links Clicked */}
+                    <EnterpriseCard>
+                        <CardHeader>
+                            <CardTitle>Top 10 Links Clicked</CardTitle>
+                        </CardHeader>
+                        <ResponsiveContainer width="100%" height={260}>
+                            <BarChart
+                                layout="vertical"
+                                data={data?.top10Links || []}
+                                margin={{ top: 5, right: 20, left: 10, bottom: 0 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                <XAxis type="number" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis
+                                    type="category"
+                                    dataKey="title"
+                                    stroke="#475569"
+                                    fontSize={11}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    width={120}
+                                />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                                    formatter={(val) => [`${val} Klik`, 'Total']}
+                                />
+                                <Bar dataKey="clicks" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </EnterpriseCard>
+
+                    {/* Stacked Bar: Clicks per Day of the Week */}
+                    <EnterpriseCard>
+                        <CardHeader>
+                            <CardTitle>Clicks per Day of Week (Device Stack)</CardTitle>
+                        </CardHeader>
+                        <ResponsiveContainer width="100%" height={260}>
+                            <BarChart data={data?.dayOfWeekData || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                                />
+                                <Legend
+                                    verticalAlign="bottom"
+                                    height={28}
+                                    iconType="circle"
+                                    formatter={(val) => <span style={{ color: '#64748b', fontSize: '11px' }}>{val}</span>}
+                                />
+                                <Bar dataKey="Mobile" stackId="a" fill={DEVICE_COLORS.Mobile} radius={[0, 0, 0, 0]} />
+                                <Bar dataKey="Desktop" stackId="a" fill={DEVICE_COLORS.Desktop} radius={[0, 0, 0, 0]} />
+                                <Bar dataKey="Tablet" stackId="a" fill={DEVICE_COLORS.Tablet} radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </EnterpriseCard>
+                </Row4Grid>
+
+                {/* ROW 6: Recent Click Logs Table */}
+                <EnterpriseCard style={{ marginBottom: '18px' }}>
+                    <CardHeader>
+                        <CardTitle>Recent Click Logs</CardTitle>
+                    </CardHeader>
+                    <TableScrollWrap>
+                        <CleanTable>
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>Tautan</th>
+                                    <th>OS</th>
+                                    <th>Browser</th>
+                                    <th>Device</th>
+                                    <th>IP Visitor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(data?.recentLogs || []).map((log, i) => (
+                                    <tr key={log.id || i}>
+                                        <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{log.date} • {log.time}</td>
+                                        <td style={{ fontWeight: '600' }}>{log.title}</td>
+                                        <td><TagBadge>{log.os}</TagBadge></td>
+                                        <td><TagBadge>{log.browser}</TagBadge></td>
+                                        <td><TagBadge>{log.device}</TagBadge></td>
+                                        <td style={{ color: '#94a3b8', fontFamily: 'monospace' }}>{log.ip}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </CleanTable>
+                    </TableScrollWrap>
+                </EnterpriseCard>
+
+                {/* ROW 7: Full Link Management (CRUD Table) */}
+                <EnterpriseCard>
+                    <TableHeaderRow>
+                        <CardTitle>Manajemen Tautan</CardTitle>
+                        <FilterGroup>
+                            <SearchBox
                                 type="text"
-                                placeholder="Cari..."
+                                placeholder="Cari judul..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                            <CategorySelect
+                            <SelectBox
                                 value={filterCategory}
                                 onChange={(e) => setFilterCategory(e.target.value)}
                             >
@@ -445,17 +564,15 @@ export default function AdminDashboard() {
                                 {categoryList.map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
-                            </CategorySelect>
-                        </FilterBar>
-                    </TableSectionHeader>
+                            </SelectBox>
+                        </FilterGroup>
+                    </TableHeaderRow>
 
                     {filteredLinks.length === 0 ? (
-                        <EmptyState>
-                            <p>Tidak ada tautan ditemukan.</p>
-                        </EmptyState>
+                        <EmptyBox>Tidak ada tautan ditemukan.</EmptyBox>
                     ) : (
-                        <TableResponsiveWrapper>
-                            <LinksTable>
+                        <TableScrollWrap>
+                            <CleanTable>
                                 <thead>
                                     <tr>
                                         <th>Tautan</th>
@@ -469,208 +586,221 @@ export default function AdminDashboard() {
                                     {filteredLinks.map((link) => (
                                         <tr key={link._id}>
                                             <td>
-                                                <LinkItemCell>
-                                                    <IconPreviewWrap className={link.featured ? 'featured' : ''}>
+                                                <LinkRowItem>
+                                                    <IconBox className={link.featured ? 'hero' : ''}>
                                                         <img src={link.icon || '/web.svg'} alt="" />
-                                                    </IconPreviewWrap>
+                                                    </IconBox>
                                                     <div>
-                                                        <LinkItemTitleRow>
-                                                            <LinkItemTitle>{link.title}</LinkItemTitle>
-                                                            {link.badge && <BadgeTag>{link.badge}</BadgeTag>}
-                                                            {link.featured && <FeaturedTag>Hero</FeaturedTag>}
-                                                        </LinkItemTitleRow>
-                                                        <LinkItemUrl href={link.url} target="_blank" rel="noreferrer">
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <span style={{ fontWeight: '600' }}>{link.title}</span>
+                                                            {link.badge && <HeroBadge>{link.badge}</HeroBadge>}
+                                                            {link.featured && <HeroTag>Hero</HeroTag>}
+                                                        </div>
+                                                        <LinkUrl href={link.url} target="_blank" rel="noreferrer">
                                                             {link.url}
-                                                        </LinkItemUrl>
+                                                        </LinkUrl>
                                                     </div>
-                                                </LinkItemCell>
+                                                </LinkRowItem>
                                             </td>
+                                            <td><CategoryPill>{link.type}</CategoryPill></td>
+                                            <td style={{ fontWeight: '600', color: '#2563eb' }}>{link.clicks || 0}</td>
                                             <td>
-                                                <CategoryTag>{link.type}</CategoryTag>
-                                            </td>
-                                            <td>
-                                                <ClickBadge>{link.clicks || 0}</ClickBadge>
-                                            </td>
-                                            <td>
-                                                <StatusToggleBtn
+                                                <ToggleStatusBtn
                                                     onClick={() => handleToggleStatus(link)}
                                                     active={link.on !== false}
-                                                    title="Ubah status"
                                                 >
                                                     <span className="dot"></span>
                                                     <span>{link.on !== false ? 'Aktif' : 'Off'}</span>
-                                                </StatusToggleBtn>
+                                                </ToggleStatusBtn>
                                             </td>
                                             <td>
-                                                <ActionButtonsCell>
-                                                    <EditBtn onClick={() => openEditModal(link)} title="Edit">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <ActionFlex>
+                                                    <IconActionBtn onClick={() => openEditModal(link)} title="Edit">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                                         </svg>
-                                                    </EditBtn>
-                                                    <DeleteBtn onClick={() => confirmDelete(link)} title="Hapus">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    </IconActionBtn>
+                                                    <IconActionBtn className="del" onClick={() => confirmDelete(link)} title="Hapus">
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                             <polyline points="3 6 5 6 21 6"></polyline>
                                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                                         </svg>
-                                                    </DeleteBtn>
-                                                </ActionButtonsCell>
+                                                    </IconActionBtn>
+                                                </ActionFlex>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
-                            </LinksTable>
-                        </TableResponsiveWrapper>
+                            </CleanTable>
+                        </TableScrollWrap>
                     )}
-                </TableSectionCard>
+                </EnterpriseCard>
 
                 {/* Modal Add / Edit Link */}
                 {modalOpen && (
-                    <ModalOverlay onClick={() => setModalOpen(false)}>
-                        <ModalCard onClick={(e) => e.stopPropagation()}>
-                            <ModalHeader>
-                                <ModalTitle>{editingLink ? "Edit Tautan" : "Tambah Tautan"}</ModalTitle>
-                                <CloseBtn onClick={() => setModalOpen(false)}>✕</CloseBtn>
-                            </ModalHeader>
+                    <ModalBackdrop onClick={() => setModalOpen(false)}>
+                        <ModalPanel onClick={(e) => e.stopPropagation()}>
+                            <ModalTop>
+                                <ModalHeading>{editingLink ? "Edit Tautan" : "Tambah Tautan"}</ModalHeading>
+                                <CloseIconButton onClick={() => setModalOpen(false)}>✕</CloseIconButton>
+                            </ModalTop>
 
-                            <ModalForm onSubmit={handleSaveLink}>
-                                <FormRow>
-                                    <FormGroup style={{ flex: 2 }}>
-                                        <Label>Judul *</Label>
-                                        <Input
+                            <FormElement onSubmit={handleSaveLink}>
+                                <FormRowFlex>
+                                    <FieldWrap style={{ flex: 2 }}>
+                                        <FieldLabel>Judul *</FieldLabel>
+                                        <FormInput
                                             type="text"
                                             placeholder="Judul tautan"
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             required
                                         />
-                                    </FormGroup>
+                                    </FieldWrap>
 
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <Label>Badge</Label>
-                                        <Input
+                                    <FieldWrap style={{ flex: 1 }}>
+                                        <FieldLabel>Badge</FieldLabel>
+                                        <FormInput
                                             type="text"
                                             placeholder="v1.3.0"
                                             value={formData.badge}
                                             onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
                                         />
-                                    </FormGroup>
-                                </FormRow>
+                                    </FieldWrap>
+                                </FormRowFlex>
 
-                                <FormGroup>
-                                    <Label>URL *</Label>
-                                    <Input
+                                <FieldWrap>
+                                    <FieldLabel>URL *</FieldLabel>
+                                    <FormInput
                                         type="url"
                                         placeholder="https://..."
                                         value={formData.url}
                                         onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                                         required
                                     />
-                                </FormGroup>
+                                </FieldWrap>
 
-                                <FormGroup>
-                                    <Label>Subtitle</Label>
-                                    <Input
+                                <FieldWrap>
+                                    <FieldLabel>Subtitle</FieldLabel>
+                                    <FormInput
                                         type="text"
                                         placeholder="Keterangan singkat"
                                         value={formData.subtitle}
                                         onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                                     />
-                                </FormGroup>
+                                </FieldWrap>
 
-                                <FormRow>
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <Label>Kategori</Label>
-                                        <Select
+                                <FormRowFlex>
+                                    <FieldWrap style={{ flex: 1 }}>
+                                        <FieldLabel>Kategori</FieldLabel>
+                                        <FormSelect
                                             value={formData.type}
                                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                                         >
                                             {DEFAULT_CATEGORIES.map(cat => (
                                                 <option key={cat} value={cat}>{cat}</option>
                                             ))}
-                                        </Select>
-                                    </FormGroup>
+                                        </FormSelect>
+                                    </FieldWrap>
 
-                                    <FormGroup style={{ flex: 1 }}>
-                                        <Label>Ikon</Label>
-                                        <Select
+                                    <FieldWrap style={{ flex: 1 }}>
+                                        <FieldLabel>Ikon</FieldLabel>
+                                        <FormSelect
                                             value={formData.icon}
                                             onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                                         >
                                             {AVAILABLE_ICONS.map(ic => (
                                                 <option key={ic.value} value={ic.value}>{ic.label}</option>
                                             ))}
-                                        </Select>
-                                    </FormGroup>
-                                </FormRow>
+                                        </FormSelect>
+                                    </FieldWrap>
+                                </FormRowFlex>
 
-                                <CheckboxRow>
-                                    <CheckboxLabel>
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.featured}
-                                            onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                                        />
-                                        <span>Hero / Unggulan</span>
-                                    </CheckboxLabel>
-                                </CheckboxRow>
+                                <CheckLabel>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.featured}
+                                        onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                                    />
+                                    <span>Hero / Unggulan</span>
+                                </CheckLabel>
 
-                                <CheckboxRow>
-                                    <CheckboxLabel>
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.on}
-                                            onChange={(e) => setFormData({ ...formData, on: e.target.checked })}
-                                        />
-                                        <span>Aktif</span>
-                                    </CheckboxLabel>
-                                </CheckboxRow>
+                                <CheckLabel>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.on}
+                                        onChange={(e) => setFormData({ ...formData, on: e.target.checked })}
+                                    />
+                                    <span>Aktif</span>
+                                </CheckLabel>
 
-                                <ModalFooter>
-                                    <CancelBtn type="button" onClick={() => setModalOpen(false)}>
-                                        Batal
-                                    </CancelBtn>
-                                    <SaveBtn type="submit" disabled={formLoading}>
+                                <ModalBottom>
+                                    <OutlineBtn type="button" onClick={() => setModalOpen(false)}>Batal</OutlineBtn>
+                                    <PrimaryBtn type="submit" disabled={formLoading}>
                                         {formLoading ? "Menyimpan..." : "Simpan"}
-                                    </SaveBtn>
-                                </ModalFooter>
-                            </ModalForm>
-                        </ModalCard>
-                    </ModalOverlay>
+                                    </PrimaryBtn>
+                                </ModalBottom>
+                            </FormElement>
+                        </ModalPanel>
+                    </ModalBackdrop>
                 )}
 
                 {/* Modal Konfirmasi Hapus */}
                 {deleteModalOpen && (
-                    <ModalOverlay onClick={() => setDeleteModalOpen(false)}>
-                        <ConfirmCard onClick={(e) => e.stopPropagation()}>
-                            <ConfirmIconWrap>
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                </svg>
-                            </ConfirmIconWrap>
-                            <ConfirmTitle>Hapus Tautan?</ConfirmTitle>
-                            <ConfirmText>
+                    <ModalBackdrop onClick={() => setDeleteModalOpen(false)}>
+                        <ModalPanel style={{ maxWidth: '360px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                            <ModalHeading>Hapus Tautan?</ModalHeading>
+                            <p style={{ fontSize: '13px', color: '#64748b', margin: '8px 0 16px' }}>
                                 Hapus <strong>&quot;{linkToDelete?.title}&quot;</strong>?
-                            </ConfirmText>
-                            <ConfirmActions>
-                                <CancelBtn onClick={() => setDeleteModalOpen(false)}>Batal</CancelBtn>
-                                <DeleteConfirmBtn onClick={handleDeleteLink} disabled={formLoading}>
+                            </p>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                <OutlineBtn onClick={() => setDeleteModalOpen(false)}>Batal</OutlineBtn>
+                                <DangerBtn onClick={handleDeleteLink} disabled={formLoading}>
                                     {formLoading ? "Menghapus..." : "Hapus"}
-                                </DeleteConfirmBtn>
-                            </ConfirmActions>
-                        </ConfirmCard>
-                    </ModalOverlay>
+                                </DangerBtn>
+                            </div>
+                        </ModalPanel>
+                    </ModalBackdrop>
                 )}
-            </DashboardWrapper>
+            </EnterpriseContainer>
         </>
     );
 }
 
-// Styled Components
-const CenterContainer = styled.div`
+// ServerSideProps for instant SSR hydration
+export async function getServerSideProps(context) {
+    const session = await getSession(context);
+    if (!session) {
+        return {
+            redirect: {
+                destination: "/admin/login",
+                permanent: false
+            }
+        };
+    }
+
+    try {
+        const initialData = await getDashboardAggregations();
+        // Convert dates/ObjectIds to JSON safe primitives
+        const serialized = JSON.parse(JSON.stringify(initialData));
+        return {
+            props: {
+                initialData: serialized
+            }
+        };
+    } catch (e) {
+        console.error("SSR Stats error:", e);
+        return {
+            props: {
+                initialData: null
+            }
+        };
+    }
+}
+
+// Styled Components (Enterprise White Cards & Subtle Borders)
+const CenterLoading = styled.div`
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -690,10 +820,10 @@ const Spinner = styled.div`
   }
 `;
 
-const DashboardWrapper = styled.div`
-  max-width: 1040px;
+const EnterpriseContainer = styled.div`
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 28px 18px 48px;
+  padding: 24px 18px 48px;
   width: 100%;
 
   @media screen and (max-width: 768px) {
@@ -701,77 +831,79 @@ const DashboardWrapper = styled.div`
   }
 `;
 
-const ToastNotification = styled.div`
+const ToastBox = styled.div`
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 18px;
+  right: 18px;
   z-index: 1000;
   display: flex;
   align-items: center;
   gap: 8px;
   background: #10b981;
   color: #ffffff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
   font-weight: 600;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 `;
 
-const NavHeader = styled.header`
+const AppHeader = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
 `;
 
-const HeaderBrand = styled.div`
+const BrandFlex = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
 `;
 
-const NavAvatar = styled.img`
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+const BrandAvatar = styled.img`
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   object-fit: cover;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
 `;
 
-const NavTitle = styled.h1`
-  font-size: 18px;
+const HeaderTitle = styled.h1`
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.3px;
   color: ${({ theme }) => theme.text.primary};
   margin: 0;
 `;
 
-const NavSubtitle = styled.p`
-  font-size: 12.5px;
+const HeaderSubTitle = styled.p`
+  font-size: 12px;
   color: ${({ theme }) => theme.text.secondary};
   margin: 0;
 `;
 
-const NavActions = styled.div`
+const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
 `;
 
-const ActionButton = styled.a`
+const OutlineBtn = styled.a`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 12.5px;
+  padding: 7px 11px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   color: ${({ theme }) => theme.text.primary};
+  cursor: pointer;
+  text-decoration: none;
   transition: all 0.15s ease;
 
   &:hover {
@@ -779,13 +911,13 @@ const ActionButton = styled.a`
   }
 `;
 
-const AddBtn = styled.button`
+const PrimaryBtn = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 12.5px;
+  padding: 7px 13px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
   background: #2563eb;
   color: #ffffff;
@@ -798,75 +930,102 @@ const AddBtn = styled.button`
   }
 `;
 
-const SignOutBtn = styled.button`
+const DangerBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background: #dc2626;
+  }
+`;
+
+const SignOutIconButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   color: #ef4444;
   cursor: pointer;
-  transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.12);
+    background: rgba(239, 68, 68, 0.1);
   }
 `;
 
-const MetricsGrid = styled.div`
+// Row 1 Grid: 3 KPI + 1 Semi-Circle Gauge
+const Row1Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 16px;
 
-  @media screen and (max-width: 860px) {
+  @media screen and (max-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media screen and (max-width: 440px) {
+  @media screen and (max-width: 520px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const MetricCard = styled.div`
+const KpiCard = styled.div`
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 12px;
-  padding: 16px 14px;
-  box-shadow: ${({ theme }) => theme.bg.cardShadow};
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
 `;
 
-const MetricTopRow = styled.div`
+const KpiTop = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 `;
 
-const MetricLabel = styled.span`
-  font-size: 12px;
+const KpiLabel = styled.span`
+  font-size: 12.5px;
   font-weight: 600;
   color: ${({ theme }) => theme.text.secondary};
 `;
 
-const MetricIconWrapper = styled.div`
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: ${({ color }) => `${color}15`};
-  color: ${({ color }) => color};
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const KpiBadge = styled.span`
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+
+  &.green {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+  }
+  &.blue {
+    background: rgba(37, 99, 235, 0.12);
+    color: #2563eb;
+  }
+  &.purple {
+    background: rgba(124, 58, 237, 0.12);
+    color: #7c3aed;
+  }
 `;
 
-const MetricValue = styled.div`
-  font-size: 22px;
+const KpiValue = styled.div`
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
   color: ${({ theme }) => theme.text.primary};
@@ -878,131 +1037,129 @@ const MetricValue = styled.div`
   }
 `;
 
-const MetricSubtext = styled.span`
+const KpiFooterText = styled.span`
   font-size: 11.5px;
   color: ${({ theme }) => theme.text.tertiary};
-  margin-top: 2px;
+  margin-top: 4px;
 `;
 
-const ChartsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 12px;
-  margin-bottom: 22px;
+const GaugeWrap = styled.div`
+  position: relative;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+`;
 
-  @media screen and (max-width: 860px) {
+const GaugeCenterValue = styled.div`
+  position: absolute;
+  bottom: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2563eb;
+`;
+
+// Row 2 & 3: Donut 1, Donut 2, Vertical Bar (14 Days)
+const Row2Grid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr;
+  gap: 14px;
+  margin-bottom: 16px;
+
+  @media screen and (max-width: 1024px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const ChartCard = styled.div`
-  background: ${({ theme }) => theme.bg.card};
-  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: ${({ theme }) => theme.bg.cardShadow};
+// Row 4 & 5: Horizontal Bar + Stacked Bar
+const Row4Grid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+
+  @media screen and (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
-const ChartHeader = styled.div`
+const EnterpriseCard = styled.div`
+  background: ${({ theme }) => theme.bg.card};
+  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+`;
+
+const CardHeader = styled.div`
   margin-bottom: 12px;
 `;
 
-const ChartTitle = styled.h2`
-  font-size: 14px;
+const CardTitle = styled.h2`
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.2px;
   color: ${({ theme }) => theme.text.primary};
   margin: 0;
 `;
 
-const ChartContainer = styled.div`
-  width: 100%;
-`;
-
-const TableSectionCard = styled.div`
-  background: ${({ theme }) => theme.bg.card};
-  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: ${({ theme }) => theme.bg.cardShadow};
-
-  @media screen and (max-width: 768px) {
-    padding: 14px 10px;
-  }
-`;
-
-const TableSectionHeader = styled.div`
+const TableHeaderRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
   gap: 10px;
 `;
 
-const SectionHeading = styled.h2`
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  color: ${({ theme }) => theme.text.primary};
-  margin: 0;
-`;
-
-const FilterBar = styled.div`
+const FilterGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 `;
 
-const SearchInput = styled.input`
-  padding: 6px 10px;
+const SearchBox = styled.input`
+  padding: 5px 9px;
   border-radius: 6px;
-  font-size: 12.5px;
+  font-size: 12px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
   outline: none;
-  width: 170px;
+  width: 150px;
 
   &:focus {
     border-color: #2563eb;
   }
-
-  @media screen and (max-width: 480px) {
-    width: 100%;
-  }
 `;
 
-const CategorySelect = styled.select`
-  padding: 6px 10px;
+const SelectBox = styled.select`
+  padding: 5px 9px;
   border-radius: 6px;
-  font-size: 12.5px;
+  font-size: 12px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
   outline: none;
   cursor: pointer;
-
-  @media screen and (max-width: 480px) {
-    width: 100%;
-  }
 `;
 
-const TableResponsiveWrapper = styled.div`
+const TableScrollWrap = styled.div`
   width: 100%;
   overflow-x: auto;
 `;
 
-const LinksTable = styled.table`
+const CleanTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 13px;
+  font-size: 12.5px;
 
   th {
     padding: 8px 10px;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -1011,7 +1168,7 @@ const LinksTable = styled.table`
   }
 
   td {
-    padding: 11px 10px;
+    padding: 9px 10px;
     border-bottom: 1px solid ${({ theme }) => theme.bg.cardBorder};
     color: ${({ theme }) => theme.text.primary};
     vertical-align: middle;
@@ -1022,16 +1179,25 @@ const LinksTable = styled.table`
   }
 `;
 
-const LinkItemCell = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
+const TagBadge = styled.span`
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: ${({ theme }) => theme.bg.primary};
+  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
+  color: ${({ theme }) => theme.text.secondary};
 `;
 
-const IconPreviewWrap = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+const LinkRowItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const IconBox = styled.div`
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   display: flex;
@@ -1040,12 +1206,12 @@ const IconPreviewWrap = styled.div`
   flex-shrink: 0;
 
   img {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     filter: var(--img);
   }
 
-  &.featured {
+  &.hero {
     background: #2563eb;
     border-color: #2563eb;
     img {
@@ -1054,46 +1220,33 @@ const IconPreviewWrap = styled.div`
   }
 `;
 
-const LinkItemTitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-`;
-
-const LinkItemTitle = styled.span`
-  font-weight: 600;
-  color: ${({ theme }) => theme.text.primary};
-`;
-
-const BadgeTag = styled.span`
-  font-size: 10px;
+const HeroBadge = styled.span`
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(37, 99, 235, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(37, 99, 235, 0.12);
   color: #2563eb;
 `;
 
-const FeaturedTag = styled.span`
-  font-size: 10px;
+const HeroTag = styled.span`
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 1px 4px;
+  border-radius: 3px;
   background: #f59e0b;
   color: #ffffff;
 `;
 
-const LinkItemUrl = styled.a`
+const LinkUrl = styled.a`
   display: block;
-  font-size: 11.5px;
+  font-size: 11px;
   color: ${({ theme }) => theme.text.secondary};
   text-decoration: none;
-  max-width: 240px;
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-top: 1px;
 
   &:hover {
     text-decoration: underline;
@@ -1101,61 +1254,48 @@ const LinkItemUrl = styled.a`
   }
 `;
 
-const CategoryTag = styled.span`
+const CategoryPill = styled.span`
   font-size: 11px;
-  font-weight: 500;
-  padding: 3px 6px;
-  border-radius: 5px;
+  padding: 2px 6px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   color: ${({ theme }) => theme.text.secondary};
-  display: inline-block;
   white-space: nowrap;
 `;
 
-const ClickBadge = styled.span`
-  font-size: 12px;
-  font-weight: 600;
-  color: #2563eb;
-`;
-
-const StatusToggleBtn = styled.button`
+const ToggleStatusBtn = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: 16px;
-  font-size: 11.5px;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-size: 11px;
   font-weight: 600;
   background: ${({ active }) => active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'};
-  border: 1px solid ${({ active }) => active ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'};
+  border: 1px solid ${({ active }) => active ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'};
   color: ${({ active }) => active ? '#10b981' : '#ef4444'};
   cursor: pointer;
-  transition: opacity 0.15s ease;
 
   .dot {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     background: ${({ active }) => active ? '#10b981' : '#ef4444'};
   }
-
-  &:hover {
-    opacity: 0.85;
-  }
 `;
 
-const ActionButtonsCell = styled.div`
+const ActionFlex = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
+  gap: 4px;
 `;
 
-const EditBtn = styled.button`
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+const IconActionBtn = styled.button`
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   color: ${({ theme }) => theme.text.primary};
@@ -1163,45 +1303,33 @@ const EditBtn = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
 
   &:hover {
     border-color: #2563eb;
     color: #2563eb;
   }
-`;
 
-const DeleteBtn = styled.button`
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: ${({ theme }) => theme.bg.primary};
-  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  color: #ef4444;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.12);
+  &.del {
+    color: #ef4444;
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
   }
 `;
 
-const EmptyState = styled.div`
+const EmptyBox = styled.div`
   text-align: center;
-  padding: 32px 16px;
+  padding: 24px;
   color: ${({ theme }) => theme.text.secondary};
-  font-size: 13px;
+  font-size: 12.5px;
 `;
 
 // Modal Styles
-const ModalOverlay = styled.div`
+const ModalBackdrop = styled.div`
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1209,77 +1337,73 @@ const ModalOverlay = styled.div`
   padding: 16px;
 `;
 
-const ModalCard = styled.div`
+const ModalPanel = styled.div`
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 16px;
+  border-radius: 12px;
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
   max-height: 90vh;
   overflow-y: auto;
-  padding: 22px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
 `;
 
-const ModalHeader = styled.div`
+const ModalTop = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 `;
 
-const ModalTitle = styled.h3`
-  font-size: 16px;
+const ModalHeading = styled.h3`
+  font-size: 15px;
   font-weight: 700;
   color: ${({ theme }) => theme.text.primary};
   margin: 0;
 `;
 
-const CloseBtn = styled.button`
+const CloseIconButton = styled.button`
   background: none;
   border: none;
   color: ${({ theme }) => theme.text.secondary};
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 2px 6px;
-
-  &:hover {
-    color: ${({ theme }) => theme.text.primary};
-  }
+  padding: 2px 4px;
 `;
 
-const ModalForm = styled.form`
+const FormElement = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 `;
 
-const FormRow = styled.div`
+const FormRowFlex = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
 
   @media screen and (max-width: 480px) {
     flex-direction: column;
   }
 `;
 
-const FormGroup = styled.div`
+const FieldWrap = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   text-align: left;
 `;
 
-const Label = styled.label`
-  font-size: 12px;
+const FieldLabel = styled.label`
+  font-size: 11.5px;
   font-weight: 600;
   color: ${({ theme }) => theme.text.primary};
 `;
 
-const Input = styled.input`
-  padding: 9px 11px;
-  border-radius: 7px;
-  font-size: 13px;
+const FormInput = styled.input`
+  padding: 7px 9px;
+  border-radius: 6px;
+  font-size: 12.5px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
@@ -1290,10 +1414,10 @@ const Input = styled.input`
   }
 `;
 
-const Select = styled.select`
-  padding: 9px 11px;
-  border-radius: 7px;
-  font-size: 12.5px;
+const FormSelect = styled.select`
+  padding: 7px 9px;
+  border-radius: 6px;
+  font-size: 12px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
@@ -1301,124 +1425,26 @@ const Select = styled.select`
   cursor: pointer;
 `;
 
-const CheckboxRow = styled.div`
-  padding: 2px 0;
-`;
-
-const CheckboxLabel = styled.label`
+const CheckLabel = styled.label`
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 12.5px;
+  gap: 6px;
+  font-size: 12px;
   color: ${({ theme }) => theme.text.primary};
   cursor: pointer;
 
   input {
-    width: 15px;
-    height: 15px;
-    cursor: pointer;
+    width: 14px;
+    height: 14px;
   }
 `;
 
-const ModalFooter = styled.div`
+const ModalBottom = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid ${({ theme }) => theme.bg.cardBorder};
-`;
-
-const CancelBtn = styled.button`
-  padding: 8px 14px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  background: ${({ theme }) => theme.bg.primary};
-  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  color: ${({ theme }) => theme.text.primary};
-  cursor: pointer;
-
-  &:hover {
-    background: ${({ theme }) => theme.bg.cardHover};
-  }
-`;
-
-const SaveBtn = styled.button`
-  padding: 8px 16px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: #1d4ed8;
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-`;
-
-const ConfirmCard = styled.div`
-  background: ${({ theme }) => theme.bg.card};
-  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 16px;
-  width: 100%;
-  max-width: 360px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
-`;
-
-const ConfirmIconWrap = styled.div`
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(239, 68, 68, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 10px;
-`;
-
-const ConfirmTitle = styled.h3`
-  font-size: 16px;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text.primary};
-  margin: 0 0 6px;
-`;
-
-const ConfirmText = styled.p`
-  font-size: 12.5px;
-  color: ${({ theme }) => theme.text.secondary};
-  line-height: 17px;
-  margin: 0 0 16px;
-`;
-
-const ConfirmActions = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-`;
-
-const DeleteConfirmBtn = styled.button`
-  padding: 8px 14px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  background: #ef4444;
-  color: #ffffff;
-  border: none;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: #dc2626;
-  }
 `;

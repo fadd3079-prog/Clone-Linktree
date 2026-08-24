@@ -1,30 +1,30 @@
 import { getDatabase } from "../../lib/dbHelper";
 import { ObjectId } from "mongodb";
+import { UAParser } from "ua-parser-js";
 
-function parseUserAgent(ua) {
-    if (!ua) return { device: "Desktop", browser: "Other" };
+function parseUserAgentDetails(uaString) {
+    if (!uaString) {
+        return { device: "Desktop", browser: "Other", os: "Unknown" };
+    }
+    const parser = new UAParser(uaString);
+    const result = parser.getResult();
 
     let device = "Desktop";
-    if (/tablet|ipad|playbook|silk/i.test(ua)) {
-        device = "Tablet";
-    } else if (/mobile|iphone|ipod|android|blackberry|iemobile|kindle/i.test(ua)) {
+    const devType = result.device?.type;
+    if (devType === "mobile" || devType === "wearable" || devType === "embedded") {
         device = "Mobile";
+    } else if (devType === "tablet") {
+        device = "Tablet";
+    } else if (/mobile|iphone|ipod|android/i.test(uaString)) {
+        device = "Mobile";
+    } else if (/ipad|tablet/i.test(uaString)) {
+        device = "Tablet";
     }
 
-    let browser = "Other";
-    if (/edg\//i.test(ua)) {
-        browser = "Edge";
-    } else if (/opr\/|opera/i.test(ua)) {
-        browser = "Opera";
-    } else if (/chrome|crios/i.test(ua)) {
-        browser = "Chrome";
-    } else if (/firefox|fxios/i.test(ua)) {
-        browser = "Firefox";
-    } else if (/safari/i.test(ua)) {
-        browser = "Safari";
-    }
+    const browser = result.browser?.name || "Other";
+    const os = result.os?.name || "Unknown";
 
-    return { device, browser };
+    return { device, browser, os };
 }
 
 export default async function handler(req, res) {
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
 
         const { linkId, url, title } = req.body || {};
         const ua = req.headers['user-agent'] || '';
-        const { device, browser } = parseUserAgent(ua);
+        const { device, browser, os } = parseUserAgentDetails(ua);
         const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
 
         const db = await getDatabase();
@@ -76,13 +76,14 @@ export default async function handler(req, res) {
             );
         }
 
-        // 2. Record click event in both 'clicks' and 'click_logs' collections for tracking & analytics
+        // 2. Record click event in both 'clicks' and 'click_logs' collections
         const logData = {
             linkId: linkId || null,
             title: title || "Unknown Link",
             url: url || "",
             device,
             browser,
+            os,
             origin,
             referer,
             ip: typeof ip === 'string' ? ip.split(',')[0].trim() : 'unknown',
