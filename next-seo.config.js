@@ -1,24 +1,29 @@
-export default {
+const defaultSEO = {
+    title: 'Mufaddhol - Fadd Graphics',
+    description: 'Design, creative media, and tech portfolio by Mufaddhol (Fadd Graphics)',
+    canonical: 'https://faddgraphics.my.id',
     openGraph: {
         type: 'website',
-        locale: 'en_IE',
-        title: 'next lnks by realvjy',
-        url: 'https://vjy.me',
-        description: 'Custom bio links for creatives who love coding. Made this first to use for my own weblinks vjy.me/lnk.',
-        locale: 'en_EN',
-        keywords: 'designer, product designer, illustrator, indian designer, vijay verma, realvjy, illlustrations, indian illustrator, ui designer india, sushi design system, zomato designer, 3dicons, uiprint, vijay realvjy, indian ui designer, design india, overlayz, nft art',
+        locale: 'id_ID',
+        url: 'https://faddgraphics.my.id',
+        title: 'Mufaddhol - Fadd Graphics',
+        description: 'Design, creative media, and tech portfolio by Mufaddhol (Fadd Graphics)',
+        site_name: 'Fadd Graphics',
+        keywords: 'mufaddhol, fadd graphics, design, portfolio, fadddompet',
         images: [
             {
+                url: 'https://dvvnmdfheftrovdqondv.supabase.co/storage/v1/object/public/site-media/about/founder-photo/e31ece7d-d9c0-427c-a8c1-4cc39e4cf9f5.jpg',
                 width: 1200,
                 height: 630,
-                url: `https://vjy.me/preview.jpg`,
+                alt: 'Mufaddhol - Fadd Graphics',
             },
         ],
-        site_name: 'realvjy',
     },
     twitter: {
-        handle: '@realvjy',
-        site: 'vjy.me',
+        handle: '@faddgraphics',
+        site: '@faddgraphics',
         cardType: 'summary_large_image',
     },
 };
+
+export default defaultSEO;

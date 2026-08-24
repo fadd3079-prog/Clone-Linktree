@@ -1,173 +1,132 @@
-// date 29-Jul, 2022
 const webLinks = [
-    // All social profile
-    {
-        title: 'Twitter',
-        url: 'https://twitter.com/realvjy',
-        type: 'social',
-        icon: '/twitter.svg',
-        on: true
-    },
+    // Top Social Bar (Only Instagram @fadd.fadhol, WhatsApp, and TikTok)
     {
         title: 'Instagram',
-        url: 'https://instagram.com/realvjy',
+        url: 'https://www.instagram.com/fadd.fadhol',
         type: 'social',
         icon: '/insta.svg',
         on: true
     },
     {
-        title: 'Dribbble',
-        url: 'https://dribbble.com/realvjy',
+        title: 'WhatsApp',
+        url: 'https://wa.me/6283150964050',
         type: 'social',
-        icon: '/dribbble.svg',
-        on: false
+        icon: '/whatsapp.svg',
+        on: true
     },
     {
-        title: 'Medium',
-        url: 'https://medium.com/@realvjy',
+        title: 'TikTok',
+        url: 'https://www.tiktok.com/@fadd.graphics',
         type: 'social',
-        icon: '/medium.svg',
-        on: false
+        icon: '/tiktok.svg',
+        on: true
+    },
+
+    // 1. Core Services & Primary Portfolios (Priority 1)
+    {
+        title: 'Official Website',
+        url: 'https://faddgraphics.my.id/',
+        type: 'Core Services & Portfolio',
+        icon: '/web.svg',
+        on: true
+    },
+
+    // 2. Direct Inquiries & Business Contact (Priority 2)
+    {
+        title: 'Chat via WhatsApp',
+        url: 'https://wa.me/6283150964050',
+        type: 'Direct Inquiries & Contact',
+        icon: '/whatsapp.svg',
+        on: true
     },
     {
-        title: 'Github',
-        url: 'https://github.com/realvjy',
-        type: 'social',
+        title: 'Email',
+        url: 'mailto:faddgraphics@gmail.com',
+        type: 'Direct Inquiries & Contact',
+        icon: '/mail.svg',
+        on: true
+    },
+
+    // 3. Featured Product / Release (Priority 3 - Highlighted)
+    {
+        title: 'Download FaddDompet App',
+        subtitle: ' ',
+        badge: 'v1.3.0',
+        url: 'https://github.com/fadd3079-prog/faddompet/releases/tag/v1.3.0',
+        type: 'Featured Product & Release',
+        icon: '/download.svg',
+        featured: true,
+        on: true
+    },
+
+    // 4. Creative Channels & Visual Media (Priority 4)
+    {
+        title: 'Instagram Portfolio',
+        url: 'https://www.instagram.com/fadd.graphics',
+        type: 'Creative Channels & Media',
+        icon: '/insta.svg',
+        on: true
+    },
+    {
+        title: 'Personal Instagram',
+        url: 'https://www.instagram.com/fadd.fadhol',
+        type: 'Creative Channels & Media',
+        icon: '/insta.svg',
+        on: true
+    },
+    {
+        title: 'TikTok',
+        url: 'https://www.tiktok.com/@fadd.graphics',
+        type: 'Creative Channels & Media',
+        icon: '/tiktok.svg',
+        on: true
+    },
+    {
+        title: 'YouTube',
+        url: 'https://www.youtube.com/@faddgraphics',
+        type: 'Creative Channels & Media',
+        icon: '/youtube.svg',
+        on: true
+    },
+
+    // 5. Professional Credentials & Tech Stack (Priority 5)
+    {
+        title: 'LinkedIn Profile',
+        url: 'https://www.linkedin.com/in/mufaddhol-01b60333a/',
+        type: 'Professional Credentials & Tech',
+        icon: '/linkedin.svg',
+        on: true
+    },
+    {
+        title: 'GitHub',
+        url: 'https://github.com/fadd3079-prog',
+        type: 'Professional Credentials & Tech',
         icon: '/github.svg',
         on: true
     },
-    {
-        title: 'Youtube',
-        url: 'https://youtube.com/realvjy',
-        type: 'social',
-        icon: '/youtube.svg',
-        on: false
-    },
-    {
-        title: 'Figma',
-        url: 'https://figma.com/@realvjy',
-        type: 'social',
-        icon: '/figma.svg',
-        on: true
-    },
-    {
-        title: 'Behance',
-        url: 'https://behance.net/realvjy',
-        type: 'social',
-        icon: '/behance.svg',
-        on: false
-    },
-    {
-        title: 'Linkedin',
-        url: 'https://www.linkedin.com/in/realvjy/',
-        type: 'social',
-        icon: '/linkedin.svg',
-        on: false
-    },
-    {
-        title: 'Mastodon',
-        url: 'https://mastodon.online/@realvjy',
-        type: 'social',
-        icon: '/mastodon.svg',
-        on: true
-    },
-    {
-        title: 'Hive Social',
-        url: 'https://www.hivesocial.app/?@realvjy',
-        type: 'social',
-        icon: '/hive.svg',
-        on: false
-    },
-    {
-        title: 'Post',
-        url: 'https://www.post.news/realvjy',
-        type: 'social',
-        icon: '/post.svg',
-        on: false
-    },
-    {
-        title: 'foundation',
-        url: 'https://vjy.me',
-        type: 'nft',
-        icon: '/foundation.svg',
-        on: false
-    },
-    {
-        title: 'opensea',
-        url: 'https://vjy.me',
-        type: 'nft',
-        icon: '/opensea.svg',
-        on: false
-    },
-    {
-        title: 'new collection',
-        url: 'https://vjy.me',
-        type: 'nft',
-        icon: '/opensea.svg',
-        on: false
-    },
-    // Install section
-    {
-        title: 'Use this template',
-        url: 'https://github.com/realvjy/nxt-lnk/generate',
-        type: 'install',
-        icon: '/use.png',
-        on: true
-    },
-    {
-        title: 'Deploy on Vercel',
-        url: 'https://vercel.com/import/git?s=https://github.com/realvjy/nxt-lnk',
-        type: 'install',
-        icon: '/vercel.svg',
-        on: true
-    },
-    {
-        title: 'v2 mytiny.page',
-        url: 'https://s.vjy.me/i',
-        type: 'install',
-        icon: 'https://beta.mytiny.page/logomark-color.svg',
-        on: true
-    },
-    {
-        title: 'Documentation',
-        url: 'https://github.com/realvjy/nxt-lnk#nxt-lnk',
-        type: 'install',
-        icon: '/doc.png',
-        on: true
-    },
-    {
-        title: 'Github',
-        url: 'https://github.com/realvjy/nxt-lnk',
-        type: 'install',
-        icon: '/github-fill.svg',
-        on: true
-    },
 
+    // 6. Personal & Community Support (Priority 6)
     {
-        title: 'Buy Me a Coffee',
-        url: 'https://www.buymeacoffee.com/realvjy',
-        type: 'other',
-        icon: '/bmc.png',
+        title: 'Threads',
+        url: 'https://www.threads.com/@fadd.fadhol',
+        type: 'Community & Support',
+        icon: '/threads.svg',
         on: true
     },
-
     {
-        title: 'link demo',
-        url: 'https://vjy.me/lnk',
-        type: 'other',
-        icon: '/vjy.png',
+        title: 'Support via Tako',
+        url: 'https://tako.id/fadhol_pemula',
+        type: 'Community & Support',
+        icon: '/heart.svg',
         on: true
     },
-
     {
-        title: 'maker website',
-        url: 'https://vjy.me',
-        type: 'other',
-        icon: '/vjy.png',
+        title: 'Support via Saweria',
+        url: 'https://saweria.co/fadholpemula',
+        type: 'Community & Support',
+        icon: '/heart.svg',
         on: true
-    },
+    }
 ];
 
 export default webLinks;
-
-

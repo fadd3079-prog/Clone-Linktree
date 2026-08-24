@@ -1,25 +1,21 @@
-// date: 1 Aug, 2022
 const bioData = [
     {
-        name: 'nxt lnk',
-        username: 'mytiny.page',
-        url: 'https://mytiny.page',
-        titleImg: true,
+        name: 'Mufaddhol',
+        username: '@fadd.graphics',
+        url: 'https://faddgraphics.my.id',
+        titleImg: false,
         avatar: '/avatar.png',
         nftAvatar: true,
-        description: 'Custom bio links for creatives who love coding. Made this first to use for my own weblinks vjy.me/lnk. ',
+        description: 'Design, Creative Media & Tech',
         descShow: true,
-        subdesc: 'Use this template and deploy on vercel for free',
+        subdesc: 'Portfolio • Business Inquiries • Products',
         subdescShow: true,
-        newProductUrl: 'https://3dicons.co',
-        newProduct: true,
-        author: 'realvjy',
-        authorURL: 'https://twitter.com/realvjy',
-        footerText: 'made by'
+        newProductUrl: 'https://github.com/fadd3079-prog/faddompet/releases/tag/v1.3.0',
+        newProduct: false,
+        author: ' Mufaddhol',
+        authorURL: 'https://faddgraphics.my.id',
+        footerText: '© ' + new Date().getFullYear() + ' Fadd Graphics. All rights reserved.'
     },
 ];
 
 export default bioData;
-
-
-

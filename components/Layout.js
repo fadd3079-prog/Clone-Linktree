@@ -1,14 +1,11 @@
-import styled from 'styled-components'
-import ReactDOM from 'react-dom';
-
-
+import styled from 'styled-components';
 
 export default function Layout({ children }) {
     return (
-        <Main >
+        <Main>
             {children}
         </Main>
-    )
+    );
 }
 
 const Main = styled.main`
@@ -17,8 +14,11 @@ const Main = styled.main`
   background-size: 100%;
   background-position: -50vh 10%;
   background-attachment: fixed;
+  display: flex;
+  justify-content: center;
+  
   @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
     background-size: 250%;
     background-position: -50vh 30vh;
-   }
+  }
 `;

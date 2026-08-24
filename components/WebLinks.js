@@ -1,19 +1,13 @@
 // Weblinks Page Sections
-// created by @realvjy
-// date: 29 Jul, 2022
+// Fadd Graphics Official Directory
 
-import Image from "next/image";
 import styled from "styled-components";
-import { Button, ButtonLink, Container, StyledLink } from "./ReusableStyles";
-import Link from "next/link";
-import { ChevronRightIcon, HexIcon, HomeIcon, TwitterIcon, NewUp, OvalIcon } from './icons';
+import { Container } from "./ReusableStyles";
+import { HexIcon, NewUp, OvalIcon } from './icons';
 import allLinks from "../data/LinksData";
 import bioData from "../data/BioData";
 
-
-
 const Links = () => {
-
   // all user info from bioData
   const name = bioData[0].name;
   const url = bioData[0].url;
@@ -30,494 +24,636 @@ const Links = () => {
   const titleImage = "/title.svg";
 
   // Check what class to use oval or hex for avatar
-  const avatarShape = bioData[0].nftAvatar ? `nft-clipped` : `oval-clipped`
+  const avatarShape = bioData[0].nftAvatar ? `nft-clipped` : `oval-clipped`;
 
+  const descriptionText = descShow ? description : '';
+  const subdescText = subdescShow ? subdesc : '';
 
-  // Description and subdescription goes here
-  const descriptionText = descShow ? description : `Write your own fall back text if description not in BioData.js or remove me/leave blank`
-  const subdescText = subdescShow ? subdesc : `Write your own if you want or just remove me/leave blank`
+  const newProduct = bioData[0].newProduct;
+  const newProductUrl = bioData[0].newProductUrl;
 
+  // Filter top social links
+  const social = allLinks.filter((el) => el.type === "social" && el.on);
 
-  const newProduct = bioData[0].newProduct; // checking for newProduct flag true false
-  const newProductUrl = bioData[0].newProductUrl; // get product url if available
-
-
-
-  // Collect all links filter by type - social, project, nft and other etc=
-  // get data for social section
-  const social = allLinks.filter((el) => {
-    return el.type === "social" && el.on
-  });
-
-  // Get data for install section
-  const install = allLinks.filter((el) => {
-    return el.type === "install" && el.on
-  });
-
-  // Get data for nfts
-  const nfts = allLinks.filter((el) => {
-    return el.type === "nft" && el.on
-  });
-
-  // Get data for other section
-  const others = allLinks.filter((el) => {
-    return el.type === "other" && el.on
-  });
+  // Filter categorized links
+  const nonSocialLinks = allLinks.filter((el) => el.type !== "social" && el.on);
+  const categories = Array.from(new Set(nonSocialLinks.map((el) => el.type)));
 
   return (
-      <LinkWrapper>
-        <LinkContainer>
-          <TopPart>
-            <LinkHeader>
-              <Avatar>
-                <AvatarWrap>
-                  {/* Avatar svg  hex or oval if nftAvatar=true will convert to hex */}
-                  <HexIcon />
-                  <OvalIcon />
-                  <div className={`${avatarShape} avatar-border`}></div>
-                  <div className={`${avatarShape} avatar-fill`}></div>
-                  <img
-                      src={avatarImg}
-                      className={avatarShape}
-                  />
-                </AvatarWrap>
-              </Avatar>
-              <Title>
-                {/* Using titleimg flag to use image as title or text */}
-                {titleImg ?
-                    <img src={titleImage} className="handle" /> :
-                    <h1>{name}</h1>
-                }
-                {/* if your remove username from data it will not appear */}
-                {
-                  username ? <h3><a href={`${url}`}>{username}</a></h3> : ''
-                }
-              </Title>
-            </LinkHeader>
+    <LinkWrapper>
+      <LinkContainer>
+        <TopPart>
+          <LinkHeader>
+            <Avatar>
+              <AvatarWrap>
+                <HexIcon />
+                <OvalIcon />
+                <div className={`${avatarShape} avatar-border`}></div>
+                <div className={`${avatarShape} avatar-fill`}></div>
+                <img
+                  src={avatarImg}
+                  className={avatarShape}
+                  alt={name}
+                />
+              </AvatarWrap>
+            </Avatar>
+            <Title>
+              {titleImg ? (
+                <img src={titleImage} className="handle" alt={name} />
+              ) : (
+                <h1>{name}</h1>
+              )}
+              {username && (
+                <h3>
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {username}
+                  </a>
+                </h3>
+              )}
+            </Title>
+          </LinkHeader>
 
-            {/* Bio Section */}
-            <LinkBio>
-              {description && <h1>{descriptionText} </h1>}
-              {subdesc && <h4>{subdescText}</h4>}
-            </LinkBio>
-            {/* End Bio Section */}
+          {/* Bio Section */}
+          <LinkBio>
+            {description && <h1>{descriptionText}</h1>}
+            {subdesc && <h4>{subdescText}</h4>}
+          </LinkBio>
 
-            {/* Weblinks started */}
-            <WebLinkWrap>
-              {/* Social Icon */}
-              <LinkSection className="social">
+          {/* Weblinks Container */}
+          <WebLinkWrap>
+            {/* Social Icons (Instagram @fadd.fadhol, WhatsApp, TikTok) */}
+            {social.length > 0 && (
+              <SocialSection>
                 <div className="iconsonly">
-                  {
-                    social.map((i) => {
-                      return (
-                          <a href={i.url} key={i.title} target="_blank" rel="noreferrer">
-                            <LinkBox className="socialIcon">
-                              <img src={i.icon} style={{ filter: 'var(--img)' }} />
-                            </LinkBox>
-                          </a>
-                      )
-                    })
-                  }
+                  {social.map((i) => (
+                    <a
+                      href={i.url}
+                      key={i.title}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={i.title}
+                    >
+                      <SocialIconBox>
+                        <img
+                          src={i.icon}
+                          style={{ filter: 'var(--img)' }}
+                          alt={i.title}
+                        />
+                      </SocialIconBox>
+                    </a>
+                  ))}
                 </div>
-              </LinkSection>
-              {/* Social Icon */}
+              </SocialSection>
+            )}
 
-              {/* Install Section */}
-              {
-                install.length > 0 ?
-                    <LinkSection>
-                      <h3>{install[0].type}</h3>
-                      {
-                        install.map((i) => {
-                          return (
-                              <a href={i.url} key={i.title} target="_blank" rel="noreferrer">
-                                <LinkBox>
-                                  <LinkTitle><img src={i.icon} style={{ filter: 'var(--img)' }} /> {i.title}</LinkTitle> <NewUp />
-                                </LinkBox>
-                              </a>
-                          )
-                        })
-                      }
-                    </LinkSection> : ''
-              }
-              {/* End Install Section */}
+            {/* Categorized Link Sections */}
+            {categories.map((category) => {
+              const sectionLinks = nonSocialLinks.filter((el) => el.type === category);
+              if (sectionLinks.length === 0) return null;
+              return (
+                <LinkSection key={category}>
+                  <SectionTitle>{category}</SectionTitle>
+                  {sectionLinks.map((i) => (
+                    <a
+                      href={i.url}
+                      key={i.title}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <LinkBox className={i.featured ? 'featured' : ''}>
+                        <LinkLeft>
+                          <IconWrapper className={i.featured ? 'featured' : ''}>
+                            <img
+                              src={i.icon}
+                              style={{ filter: i.featured ? 'none' : 'var(--img)' }}
+                              alt=""
+                            />
+                          </IconWrapper>
+                          <LinkContent>
+                            <LinkHeaderRow>
+                              <LinkTitle className={i.featured ? 'featured' : ''}>
+                                {i.title}
+                              </LinkTitle>
+                              {i.badge && (
+                                <Badge className={i.featured ? 'featured' : ''}>
+                                  {i.badge}
+                                </Badge>
+                              )}
+                            </LinkHeaderRow>
+                            {i.featured && i.subtitle && i.subtitle.trim().length > 0 && (
+                              <LinkSubtitle className={i.featured ? 'featured' : ''}>
+                                {i.subtitle}
+                              </LinkSubtitle>
+                            )}
+                          </LinkContent>
+                        </LinkLeft>
+                        <ArrowWrap className={i.featured ? 'featured' : ''}>
+                          <NewUp />
+                        </ArrowWrap>
+                      </LinkBox>
+                    </a>
+                  ))}
+                </LinkSection>
+              );
+            })}
 
-              {/* NFT Section */}
-              {
-                nfts.length > 0 ?
-                    <LinkSection>
-                      <h3>{nfts[0].type}s</h3>
-                      {
-                        nfts.map((i) => {
-                          return (
-                              <a href={i.url} key={i.title} target="_blank" rel="noreferrer">
-                                <LinkBox>
-                                  <LinkTitle><img src={i.icon} style={{ filter: 'var(--img)' }} /> {i.title}</LinkTitle> <NewUp />
-                                </LinkBox>
-                              </a>
-                          )
-                        })
-                      }
-                    </LinkSection>
-                    : ''
-              }
-              {/* End NFT Section */}
+            {/* Featured banner if enabled in BioData */}
+            {newProduct && (
+              <NewSection>
+                <a href={newProductUrl} target="_blank" rel="noreferrer">
+                  <img
+                    src={'/newproduct.png'}
+                    className="newproduct"
+                    alt="Featured Product"
+                  />
+                </a>
+              </NewSection>
+            )}
+          </WebLinkWrap>
+        </TopPart>
 
-              {/* Other Section */}
-              {
-                others.length > 0 ?
-                    <LinkSection>
-                      <h3>{others[0].type}</h3>
-                      {/* BioData.js > newProduct == true */}
-                      {/* New Section will render once newProduct == true */}
-                      {(newProduct) ? <NewSection>
-                        <a href={newProductUrl} target="_blank" rel="noreferrer">
-                          <img
-                              src={'/newproduct.png'}
-                              className="newproduct"
-                          />
-                        </a>
-                      </NewSection> : ''
-                      }
-                      {/* End Biodata.js, You can move this section anywhere */}
-                      {
-                        others.map((i) => {
-                          return (
-                              <a href={i.url} key={i.title} target="_blank" rel="noreferrer">
-                                <LinkBox>
-                                  <LinkTitle><img src={i.icon} /> {i.title}</LinkTitle> <NewUp />
-                                </LinkBox>
-                              </a>
-                          )
-                        })
-                      }
-                    </LinkSection> : ''
-              }
-              {/* End Other Section */}
-
-            </WebLinkWrap>
-            {/* End Weblinks */}
-          </TopPart>
-          <BottomPart>
-            <LinkFoot>
-              <h4>{footerText} <a href={authorURL}>{author}</a></h4>
-            </LinkFoot>
-          </BottomPart>
-
-        </LinkContainer>
-      </LinkWrapper>
-
-  )
+        <BottomPart>
+          <LinkFoot>
+            <h4>
+              {footerText} <a href={authorURL} target="_blank" rel="noreferrer">{author}</a>
+            </h4>
+          </LinkFoot>
+        </BottomPart>
+      </LinkContainer>
+    </LinkWrapper>
+  );
 };
 
 export default Links;
 
 const LinkWrapper = styled(Container)`
-`
+  max-width: 580px;
+  width: 100%;
+`;
+
 const LinkContainer = styled.div`
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    text-align: center;
-    padding: 24px;
-`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  padding: 36px 16px 40px;
+`;
 
 const LinkHeader = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 60px;
-    margin-bottom: 12px;
-    @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-       margin-top: 20px;
-    }
-`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 32px;
+  margin-bottom: 10px;
+  @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+    margin-top: 12px;
+  }
+`;
 
 const Avatar = styled.div`
-    height: 90px;
-    width: 90px;
-    position: relative;
-    margin-bottom: 12px;
-`
+  height: 88px;
+  width: 88px;
+  position: relative;
+  margin-bottom: 14px;
+`;
 
 const AvatarWrap = styled.div`
-   height: 100%;
-   width: 100%;
-   filter: drop-shadow(0px 1px 2px var(--avatar-shadow));
-   img{
+  height: 100%;
+  width: 100%;
+  filter: drop-shadow(0px 2px 6px var(--avatar-shadow));
+  cursor: default;
+
+  img {
     height: calc(100% - 6px);
     width: calc(100% - 6px);
-   }
-   .avatar-border{
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        background: ${({ theme }) => theme.bg.primary};
-   }
-   .avatar-fill{
-        height: calc(100% - 6px);
-        width: calc(100% - 6px);
-        position: absolute;
-        background: ${({ theme }) => theme.bg.primary};
-   }
-`
+    object-fit: cover;
+  }
+  .avatar-border {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    background: ${({ theme }) => theme.bg.primary};
+  }
+  .avatar-fill {
+    height: calc(100% - 6px);
+    width: calc(100% - 6px);
+    position: absolute;
+    background: ${({ theme }) => theme.bg.primary};
+  }
+`;
 
 const Title = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    h1{
-      font-size: 38px;
-      font-weight: 700;
-      
-      letter-spacing: -2px;
-      background: linear-gradient(90deg, #4AB1F1 5.71%, #566CEC 33.77%, #D749AF 61.82%, #FF7C51 91.21%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        font-size: 32px;
-      }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    line-height: 1.2;
+    text-transform: none;
+    background: ${({ theme }) => theme.text.nameGradient};
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+
+    @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+      font-size: 24px;
     }
-    h3{
-      margin-top:6px;
-      font-size: 18px;
-      font-weight: 500;
-      letter-spacing: -.7px;
+  }
+
+  h3 {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+    text-transform: none;
+
+    a {
       color: ${({ theme }) => theme.text.secondary};
-      opacity: .5;
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        font-size: 15px;
-        margin-top:2px;
+      transition: color 0.15s ease;
+      opacity: 0.85;
+
+      &:hover {
+        opacity: 1;
+        color: ${({ theme }) => theme.text.primary};
       }
     }
-    
- 
-    .name{
-      margin-top: 8px;
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        width: 140px;
-      }
+
+    @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+      font-size: 13px;
     }
-    .handle{
-      height: 32px;
-      margin-top: 6px;
-      margin-bottom: 6px;
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        height: 26px;
-      }
-    }
-`
+  }
+
+  .handle {
+    height: 28px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+`;
 
 const LinkBio = styled.div`
-    display: flex;
-    flex-direction: column;
-    h1{
-      font-size: 22px;
-      line-height: 30px;
-      font-weight: 500;
-      letter-spacing: -0.6px;
-      padding: 0 20px;
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        font-size: 18px;
-        line-height: 26px;
-        padding: 0 8px;
-
-      }
-      vertical-align: middle;
-      span{
-        font-size: 12px;
-        vertical-align: bottom;
-        line-height: 30px;
-        color: ${({ theme }) => theme.text.secondary};
-        margin: 0 2px;
-        @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-          font-size: 10px;
-          line-height: 20px;
-        }
-      }
-    }
-    h4{
-      font-size: 18px;
-      letter-spacing: -.5px;
-      margin: 10px 0;
-      color: ${({ theme }) => theme.text.secondary};
-      font-weight: 500;
-        @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-          font-size: 15px;
-          padding: 0 20px;
-          line-height: 24px;
-        }
-      a{
-         font-weight: 700;
-         opacity: .7;
-         &:hover{
-          opacity: 1;
-         }
-      }
-    }
-
-`
-
-const TopPart = styled.div`
-    
-`
-
-
-
-const BottomPart = styled.div`
-    margin-bottom: 40px;
-    
-`
-const LinkFoot = styled.div`
-    h4{
-      color: ${({ theme }) => theme.text.secondary};
-      line-height: 32px;
-      letter-spacing: -.2px;
-      font-size: 16px;
-      font-weight: 500;
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        font-size: 12px;
-      }
-      span{
-        font-size: 10px;
-        vertical-align: bottom;
-        line-height: 32px;
-        margin: 0 2px;
-        opacity: .6;
-        @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-          font-size: 8px;
-        }
-      }
-    }
-`
-
-const WebLinkWrap = styled.div`
-    @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-       padding: 0 12px;
-    }
-`
-
-
-const LinkSection = styled.div`
-    padding: 12px 0;
-    display: flex;
-    margin: 0 auto;
-    max-width: 400px;
-    flex-direction: column;
-    &.social{
-      max-width: max-content;
-      padding: 0;
-      margin-bottom: 18px;
-    }
-    .iconsonly{
-      display: flex;
-      justify-content: center;
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        flex-wrap: wrap;
-      }
-    }
-    h3{
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      margin-bottom: 4px;
-      color: ${({ theme }) => theme.text.secondary};
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        font-size: 11px;
-      }
-    }
-`
-
-const LinkBox = styled.div`
-    padding: 18px 20px;
-    border-radius: 12px;
-    margin: 8px 18px;
-    border: 1px solid ${({ theme }) => theme.bg.secondary};
-    flex-direction: row;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -.5px;
-    position: relative;
-    text-align: center;
-    
-    &::before{
-      content: "";
-      border-radius: 12px;
-      display: block;
-      position: absolute;
-      z-index: -1;
-      inset: -2px;
-      opacity: 0;
-      transform: scale(0.8);
-    }
-    &:hover{
-    transition: all 333ms ease 0s;
-    border-color: transparent;
-      &::before{
-        opacity: 1;
-        background: ${({ theme }) => theme.bg.hover};
-        transition: all 333ms ease 0s;
-        transform: scale(1);
-      }
-    }
-    .new-up{
-      transform: scale(.8);
-      opacity: .7;
-    }
-    
-    &.socialIcon{
-      padding: 16px;
-      border-radius: 50%;
-      border: none;
-      margin: 4px;
-      img{
-        height: 24px;
-      }
-     
-      @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-        padding: 10px;
-        margin: 2px;
-        img{
-          height: 20px;
-        }
-      }
-    }
-    @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
-      padding: 12px 16px;
-      font-size: 16px;
-    }
-`
-const LinkTitle = styled.div`
   display: flex;
-  font-size: 18px;
+  flex-direction: column;
   align-items: center;
+  max-width: 460px;
+  margin: 0 auto;
+
+  h1 {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    padding: 0 16px;
+    color: ${({ theme }) => theme.text.primary};
+    text-transform: none;
+
     @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
       font-size: 14px;
+      line-height: 20px;
+      padding: 0 8px;
     }
-    img{
-      height: 20px;
-      margin-right: 10px;
+  }
+
+  h4 {
+    font-size: 13.5px;
+    line-height: 19px;
+    letter-spacing: -0.1px;
+    margin: 4px 0 12px;
+    color: ${({ theme }) => theme.text.secondary};
+    font-weight: 400;
+    text-transform: none;
+
+    @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+      font-size: 12.5px;
+      line-height: 18px;
+      padding: 0 12px;
     }
-`
+
+    a {
+      font-weight: 500;
+      color: ${({ theme }) => theme.text.primary};
+      opacity: 0.85;
+      transition: opacity 0.15s ease;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+`;
+
+const TopPart = styled.div`
+  width: 100%;
+`;
+
+const BottomPart = styled.div`
+  margin-top: 32px;
+  margin-bottom: 12px;
+`;
+
+const LinkFoot = styled.div`
+  h4 {
+    color: ${({ theme }) => theme.text.tertiary};
+    line-height: 22px;
+    letter-spacing: -0.1px;
+    font-size: 13px;
+    font-weight: 400;
+    text-transform: none;
+
+    @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+      font-size: 12px;
+    }
+
+    a {
+      color: ${({ theme }) => theme.text.secondary};
+      font-weight: 500;
+      transition: color 0.15s ease;
+      opacity: 0.85;
+
+      &:hover {
+        opacity: 1;
+        color: ${({ theme }) => theme.text.primary};
+      }
+    }
+  }
+`;
+
+const WebLinkWrap = styled.div`
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+
+  @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+    padding: 0;
+  }
+`;
+
+const SocialSection = styled.div`
+  padding: 6px 0 12px;
+  display: flex;
+  justify-content: center;
+
+  .iconsonly {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+`;
+
+const SocialIconBox = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.bg.card};
+  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
+  box-shadow: ${({ theme }) => theme.bg.cardShadow};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+  img {
+    height: 18px;
+    width: 18px;
+    display: block;
+  }
+
+  &:hover {
+    background: ${({ theme }) => theme.bg.cardHover};
+    border-color: ${({ theme }) => theme.bg.cardBorderHover};
+    box-shadow: ${({ theme }) => theme.bg.cardShadowHover};
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+    width: 38px;
+    height: 38px;
+    img {
+      height: 16px;
+      width: 16px;
+    }
+  }
+`;
+
+const LinkSection = styled.div`
+  padding: 4px 0 8px;
+  display: flex;
+  margin: 0 auto;
+  width: 100%;
+  flex-direction: column;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin: 12px 10px 6px;
+  text-align: left;
+  color: ${({ theme }) => theme.text.primary};
+  text-transform: none;
+
+  @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+    font-size: 12px;
+    margin: 10px 8px 5px;
+  }
+`;
+
+const LinkBox = styled.div`
+  padding: 13px 16px;
+  border-radius: 12px;
+  margin: 4px 6px;
+  background: ${({ theme }) => theme.bg.card};
+  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
+  box-shadow: ${({ theme }) => theme.bg.cardShadow};
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.bg.cardHover};
+    border-color: ${({ theme }) => theme.bg.cardBorderHover};
+    box-shadow: ${({ theme }) => theme.bg.cardShadowHover};
+
+    .new-up {
+      opacity: 0.85;
+    }
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &.featured {
+    padding: 16px 18px;
+    background: ${({ theme }) => theme.bg.featuredCard};
+    border: 1px solid ${({ theme }) => theme.bg.featuredBorder};
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.14);
+
+    &:hover {
+      background: ${({ theme }) => theme.bg.featuredCardHover};
+      border-color: ${({ theme }) => theme.bg.featuredBorderHover};
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+    padding: 12px 14px;
+    margin: 4px 4px;
+
+    &.featured {
+      padding: 14px 14px;
+    }
+  }
+`;
+
+const LinkLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  img {
+    height: 20px;
+    width: 20px;
+    display: block;
+  }
+
+  &.featured {
+    img {
+      filter: brightness(0) invert(1) !important;
+    }
+  }
+`;
+
+const LinkContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+`;
+
+const LinkHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
+
+const LinkTitle = styled.span`
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: ${({ theme }) => theme.text.primary};
+  text-transform: none;
+
+  &.featured {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: ${({ theme }) => theme.bg.featuredText};
+  }
+
+  @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+    font-size: 13.5px;
+
+    &.featured {
+      font-size: 14px;
+    }
+  }
+`;
+
+const Badge = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  text-transform: none;
+  background: ${({ theme }) => theme.bg.secondary};
+  color: ${({ theme }) => theme.text.primary};
+
+  &.featured {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    background: ${({ theme }) => theme.bg.featuredBadgeBg};
+    color: ${({ theme }) => theme.bg.featuredBadgeText};
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const LinkSubtitle = styled.span`
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  color: ${({ theme }) => theme.text.secondary};
+  margin-top: 3px;
+  text-transform: none;
+
+  &.featured {
+    font-weight: 500;
+    color: ${({ theme }) => theme.bg.featuredSubtext};
+  }
+
+  @media screen and (max-width: ${({ theme }) => theme.deviceSize.tablet}) {
+    font-size: 11.5px;
+  }
+`;
+
+const ArrowWrap = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+  color: ${({ theme }) => theme.text.secondary};
+  opacity: 0.35;
+  transition: opacity 0.15s ease;
+
+  &.featured {
+    color: ${({ theme }) => theme.bg.featuredText};
+    opacity: 0.95;
+  }
+
+  .new-up {
+    transform: scale(0.85);
+  }
+`;
 
 const NewSection = styled.div`
   display: flex;
   align-items: center;
-  padding: 16px 20px;
-    img{
-      width: 100%;
-      border: 1px solid ${({ theme }) => theme.bg.secondary};
-      border-radius: 12px;
-      cursor: pointer;
-      &:hover{
-       transform: scale(1.01);
-      }
+  padding: 12px 6px;
+
+  img {
+    width: 100%;
+    border: 1px solid ${({ theme }) => theme.bg.cardBorder};
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+      border-color: ${({ theme }) => theme.bg.cardBorderHover};
     }
-`
+  }
+`;
