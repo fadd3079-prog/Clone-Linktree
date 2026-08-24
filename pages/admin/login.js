@@ -32,14 +32,16 @@ export default function AdminLogin() {
             const res = await signIn("credentials", {
                 redirect: false,
                 username: username.trim(),
-                password
+                password,
+                callbackUrl: "/admin"
             });
             if (res?.error) {
                 setErrorMsg(res.error === "CredentialsSignin"
                     ? "Email atau password salah."
                     : res.error);
             } else if (res?.ok) {
-                router.push("/admin");
+                // Use replace to avoid back-button redirect loop
+                router.replace("/admin");
             }
         } catch {
             setErrorMsg("Terjadi kesalahan koneksi.");

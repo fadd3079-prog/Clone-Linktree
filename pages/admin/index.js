@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSession, signOut, getSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+import { getToken } from "next-auth/jwt";
 import { useRouter } from "next/router";
 import styled from "styled-components";
 import Head from "next/head";
@@ -102,12 +103,11 @@ export default function EnterpriseDashboard({ initialData }) {
     }, []);
 
     useEffect(() => {
-        if (status === "unauthenticated") {
-            router.replace("/admin/login");
-        } else if (status === "authenticated" && !initialData) {
+        // Only fetch if SSR data was missing (e.g. client nav without props)
+        if (status === "authenticated" && !initialData) {
             fetchLatestData();
         }
-    }, [status, router, initialData, fetchLatestData]);
+    }, [status, initialData, fetchLatestData]);
 
     const openAddModal = () => {
         setEditingLink(null);
@@ -804,8 +804,13 @@ export default function EnterpriseDashboard({ initialData }) {
 
 // ServerSideProps for instant SSR hydration
 export async function getServerSideProps(context) {
-    const session = await getSession(context);
-    if (!session) {
+    // Use getToken (reads JWT directly from cookie, no HTTP round-trip)
+    const token = await getToken({
+        req: context.req,
+        secret: process.env.NEXTAUTH_SECRET || "faddgraphics_super_secret_jwt_key_2026"
+    });
+
+    if (!token) {
         return {
             redirect: {
                 destination: "/admin/login",
