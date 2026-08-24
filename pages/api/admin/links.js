@@ -1,4 +1,4 @@
-import { getDatabase } from "../../../lib/dbHelper";
+import clientPromise from "../../../lib/mongodb";
 import { getSession } from "next-auth/react";
 import { ObjectId } from "mongodb";
 
@@ -8,7 +8,8 @@ export default async function handler(req, res) {
         return res.status(401).json({ success: false, message: "Unauthorized. Silakan login terlebih dahulu." });
     }
 
-    const db = await getDatabase();
+    const client = await clientPromise;
+    const db = client.db("linktree_clone");
     const collection = db.collection("links");
 
     // 1. GET: Ambil semua links

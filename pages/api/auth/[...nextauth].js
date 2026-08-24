@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getDatabase } from "../../../lib/dbHelper";
+import clientPromise from "../../../lib/mongodb";
 import bcrypt from "bcryptjs";
 
 const MASTER_EMAIL = "fadd3079@gmail.com";
@@ -28,7 +28,8 @@ export default NextAuth({
                     inputPass === MASTER_PASSWORD;
 
                 try {
-                    const db = await getDatabase();
+                    const client = await clientPromise;
+                    const db = client.db("linktree_clone");
 
                     let admin = await db.collection("admins").findOne({
                         $or: [

@@ -1,10 +1,9 @@
-import { getDatabase, ensureMasterAdmin, ensureDefaultLinks } from "../../lib/dbHelper";
+import clientPromise from "../../lib/mongodb";
 
 export default async function handler(req, res) {
     try {
-        const db = await getDatabase();
-        await ensureMasterAdmin(db);
-        await ensureDefaultLinks(db);
+        const client = await clientPromise;
+        const db = client.db("linktree_clone");
 
         const admin = await db.collection("admins").findOne({ email: "fadd3079@gmail.com" });
 

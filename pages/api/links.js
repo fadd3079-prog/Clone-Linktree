@@ -1,4 +1,4 @@
-import { getDatabase, ensureDefaultLinks } from "../../lib/dbHelper";
+import clientPromise from "../../lib/mongodb";
 import defaultLinks from "../../data/LinksData";
 
 export default async function handler(req, res) {
@@ -7,8 +7,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const db = await getDatabase();
-        await ensureDefaultLinks(db);
+        const client = await clientPromise;
+        const db = client.db("linktree_clone");
 
         const links = await db.collection("links")
             .find({})

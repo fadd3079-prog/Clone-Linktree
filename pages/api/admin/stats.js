@@ -1,10 +1,9 @@
-import { getDatabase, ensureMasterAdmin, ensureDefaultLinks } from "../../../lib/dbHelper";
+import clientPromise from "../../../lib/mongodb";
 import { getSession } from "next-auth/react";
 
 export async function getDashboardAggregations() {
-    const db = await getDatabase();
-    await ensureMasterAdmin(db);
-    await ensureDefaultLinks(db);
+    const client = await clientPromise;
+    const db = client.db("linktree_clone");
 
     const linksCollection = db.collection("links");
     const logsCollection = db.collection("click_logs");
@@ -143,6 +142,10 @@ export default async function handler(req, res) {
     const session = await getSession({ req });
     if (!session) {
         return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (req.method !== 'GET') {
+        return res.status(405).json({ message: 'Method not allowed' });
     }
 
     try {

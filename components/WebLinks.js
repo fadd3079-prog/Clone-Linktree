@@ -10,24 +10,21 @@ import bioData from "../data/BioData";
 import ThemeToggle from "./ThemeToggle";
 
 const Links = ({ initialLinks }) => {
-  const [linksList, setLinksList] = useState(initialLinks || defaultLinks);
+  // Use initialLinks from SSR, fallback to defaultLinks if empty
+  const defaultList = Array.isArray(initialLinks) && initialLinks.length > 0 ? initialLinks : defaultLinks;
+  const [linksList, setLinksList] = useState(defaultList);
 
-  // Fetch updated links from MongoDB API
   useEffect(() => {
-    fetch("/api/links")
-      .then(res => res.json())
-      .then(json => {
-        if (json?.success && Array.isArray(json.data) && json.data.length > 0) {
-          setLinksList(json.data);
-        }
-      })
-      .catch(err => console.error("Links fetch fallback:", err));
-  }, []);
+    // If initialLinks was updated, sync it
+    if (Array.isArray(initialLinks) && initialLinks.length > 0) {
+      setLinksList(initialLinks);
+    }
+  }, [initialLinks]);
 
   // Track click event asynchronously
   const handleLinkClick = (link) => {
     try {
-      fetch("/api/click", {
+      fetch("/api/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
