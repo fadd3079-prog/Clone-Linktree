@@ -7,6 +7,7 @@ import { Container } from "./ReusableStyles";
 import { HexIcon, NewUp, OvalIcon } from './icons';
 import defaultLinks from "../data/LinksData";
 import bioData from "../data/BioData";
+import ThemeToggle from "./ThemeToggle";
 
 const Links = ({ initialLinks }) => {
   const [linksList, setLinksList] = useState(initialLinks || defaultLinks);
@@ -74,6 +75,9 @@ const Links = ({ initialLinks }) => {
   return (
     <LinkWrapper>
       <LinkContainer>
+        <TopToggleRow>
+          <ThemeToggle size={34} />
+        </TopToggleRow>
         <TopPart>
           <LinkHeader>
             <Avatar>
@@ -232,7 +236,15 @@ const LinkContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   text-align: center;
-  padding: 36px 16px 40px;
+  padding: 24px 16px 40px;
+  position: relative;
+`;
+
+const TopToggleRow = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
 `;
 
 const LinkHeader = styled.div`

@@ -3,6 +3,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import styled from "styled-components";
 import Head from "next/head";
+import ThemeToggle from "../../components/ThemeToggle";
 
 export default function AdminLogin() {
     const { status } = useSession();
@@ -63,6 +64,10 @@ export default function AdminLogin() {
                 <title>Login • Admin</title>
             </Head>
             <LoginWrapper>
+                <TopRightToggle>
+                    <ThemeToggle size={38} />
+                </TopRightToggle>
+
                 <LoginCard>
                     <BrandHeader>
                         <AvatarImg src="/avatar.png" alt="Fadd" />
@@ -174,6 +179,13 @@ const LoginWrapper = styled.div`
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
+  position: relative;
+`;
+
+const TopRightToggle = styled.div`
+  position: absolute;
+  top: 20px;
+  right: 20px;
 `;
 
 const LoginCard = styled.div`
@@ -181,13 +193,12 @@ const LoginCard = styled.div`
   max-width: 380px;
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 32px 24px;
   box-shadow: ${({ theme }) => theme.bg.cardShadow};
 
   @media screen and (max-width: 480px) {
     padding: 24px 18px;
-    border-radius: 14px;
   }
 `;
 
@@ -205,7 +216,7 @@ const AvatarImg = styled.img`
   border-radius: 14px;
   object-fit: cover;
   margin-bottom: 10px;
-  border: 2px solid ${({ theme }) => theme.bg.cardBorder};
+  border: 1.5px solid ${({ theme }) => theme.bg.cardBorder};
 `;
 
 const BrandTitle = styled.h1`

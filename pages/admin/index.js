@@ -4,12 +4,13 @@ import { useRouter } from "next/router";
 import styled from "styled-components";
 import Head from "next/head";
 import {
-    BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend, CartesianGrid
 } from "recharts";
 import { getDashboardAggregations } from "../api/admin/stats";
+import ThemeToggle from "../../components/ThemeToggle";
 
-const OS_COLORS = ["#2563eb", "#38bdf8", "#6366f1", "#a855f7", "#ec4899", "#94a3b8"];
+const OS_COLORS = ["#2563eb", "#0284c7", "#6366f1", "#a855f7", "#ec4899", "#64748b"];
 const BROWSER_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#64748b"];
 const DEVICE_COLORS = {
     Mobile: "#2563eb",
@@ -238,11 +239,14 @@ export default function EnterpriseDashboard({ initialData }) {
     const categoryList = Array.from(new Set(links.map(l => l.type).filter(Boolean)));
 
     // Gauge Semi-Circle Data
-    const gaugeValue = data?.kpi?.dailyTargetPercentage || 78;
+    const gaugeValue = data?.kpi?.dailyTargetPercentage || 0;
     const gaugeData = [
         { name: "Achieved", value: gaugeValue, color: "#2563eb" },
-        { name: "Remaining", value: Math.max(0, 100 - gaugeValue), color: "#e2e8f0" }
+        { name: "Remaining", value: Math.max(0, 100 - gaugeValue), color: "rgba(148, 163, 184, 0.2)" }
     ];
+
+    const hasOsData = (data?.osBreakdown || []).length > 0;
+    const hasBrowserData = (data?.browserBreakdown || []).length > 0;
 
     return (
         <>
@@ -272,6 +276,8 @@ export default function EnterpriseDashboard({ initialData }) {
                     </BrandFlex>
 
                     <HeaderActions>
+                        <ThemeToggle size={34} />
+
                         <OutlineBtn href="/" target="_blank" rel="noreferrer" title="Lihat Web">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -305,7 +311,7 @@ export default function EnterpriseDashboard({ initialData }) {
                     <KpiCard>
                         <KpiTop>
                             <KpiLabel>Total Clicks</KpiLabel>
-                            <KpiBadge className="green">+14.2%</KpiBadge>
+                            <KpiBadge className="green">Real</KpiBadge>
                         </KpiTop>
                         <KpiValue>{data?.kpi?.totalClicks?.toLocaleString() ?? 0}</KpiValue>
                         <KpiFooterText>Akumulasi klik seluruh tautan</KpiFooterText>
@@ -315,7 +321,7 @@ export default function EnterpriseDashboard({ initialData }) {
                     <KpiCard>
                         <KpiTop>
                             <KpiLabel>Active Links</KpiLabel>
-                            <KpiBadge className="blue">100% On</KpiBadge>
+                            <KpiBadge className="blue">{data?.kpi?.activeLinks ?? 0} On</KpiBadge>
                         </KpiTop>
                         <KpiValue>{data?.kpi?.activeLinks ?? 0} <small>/ {data?.kpi?.totalLinks ?? 0}</small></KpiValue>
                         <KpiFooterText>Tautan aktif publik</KpiFooterText>
@@ -325,7 +331,7 @@ export default function EnterpriseDashboard({ initialData }) {
                     <KpiCard>
                         <KpiTop>
                             <KpiLabel>Unique Visitors</KpiLabel>
-                            <KpiBadge className="purple">+8.5%</KpiBadge>
+                            <KpiBadge className="purple">IP</KpiBadge>
                         </KpiTop>
                         <KpiValue>{data?.kpi?.uniqueVisitors?.toLocaleString() ?? 0}</KpiValue>
                         <KpiFooterText>Pengunjung unik terdeteksi</KpiFooterText>
@@ -334,7 +340,7 @@ export default function EnterpriseDashboard({ initialData }) {
                     {/* Gauge Card: Daily Target / CTR Ratio */}
                     <KpiCard style={{ position: 'relative', overflow: 'hidden' }}>
                         <KpiTop>
-                            <KpiLabel>Daily Target</KpiLabel>
+                            <KpiLabel>Daily Activity</KpiLabel>
                             <KpiBadge className="blue">{data?.kpi?.todayClicks ?? 0} Hari ini</KpiBadge>
                         </KpiTop>
                         <GaugeWrap>
@@ -369,33 +375,44 @@ export default function EnterpriseDashboard({ initialData }) {
                         <CardHeader>
                             <CardTitle>User Operating Systems</CardTitle>
                         </CardHeader>
-                        <ResponsiveContainer width="100%" height={210}>
-                            <PieChart>
-                                <Pie
-                                    data={data?.osBreakdown || []}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={48}
-                                    outerRadius={72}
-                                    paddingAngle={3}
-                                    dataKey="value"
-                                >
-                                    {(data?.osBreakdown || []).map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={OS_COLORS[index % OS_COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
-                                    formatter={(val, name) => [`${val} Klik`, name]}
-                                />
-                                <Legend
-                                    verticalAlign="bottom"
-                                    height={32}
-                                    iconType="circle"
-                                    formatter={(val) => <span style={{ color: '#64748b', fontSize: '11px' }}>{val}</span>}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
+                        {hasOsData ? (
+                            <ResponsiveContainer width="100%" height={210}>
+                                <PieChart>
+                                    <Pie
+                                        data={data?.osBreakdown || []}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={48}
+                                        outerRadius={72}
+                                        paddingAngle={3}
+                                        dataKey="value"
+                                    >
+                                        {(data?.osBreakdown || []).map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={OS_COLORS[index % OS_COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                                        formatter={(val, name) => [`${val} Klik`, name]}
+                                    />
+                                    <Legend
+                                        verticalAlign="bottom"
+                                        height={32}
+                                        iconType="circle"
+                                        formatter={(val) => <span style={{ fontSize: '11px' }}>{val}</span>}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <NoDataChartBox>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Belum ada data OS (0 klik)</span>
+                            </NoDataChartBox>
+                        )}
                     </EnterpriseCard>
 
                     {/* Donut 2: Browsers */}
@@ -403,33 +420,44 @@ export default function EnterpriseDashboard({ initialData }) {
                         <CardHeader>
                             <CardTitle>User Browsers</CardTitle>
                         </CardHeader>
-                        <ResponsiveContainer width="100%" height={210}>
-                            <PieChart>
-                                <Pie
-                                    data={data?.browserBreakdown || []}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={48}
-                                    outerRadius={72}
-                                    paddingAngle={3}
-                                    dataKey="value"
-                                >
-                                    {(data?.browserBreakdown || []).map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={BROWSER_COLORS[index % BROWSER_COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
-                                    formatter={(val, name) => [`${val} Klik`, name]}
-                                />
-                                <Legend
-                                    verticalAlign="bottom"
-                                    height={32}
-                                    iconType="circle"
-                                    formatter={(val) => <span style={{ color: '#64748b', fontSize: '11px' }}>{val}</span>}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
+                        {hasBrowserData ? (
+                            <ResponsiveContainer width="100%" height={210}>
+                                <PieChart>
+                                    <Pie
+                                        data={data?.browserBreakdown || []}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={48}
+                                        outerRadius={72}
+                                        paddingAngle={3}
+                                        dataKey="value"
+                                    >
+                                        {(data?.browserBreakdown || []).map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={BROWSER_COLORS[index % BROWSER_COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                                        formatter={(val, name) => [`${val} Klik`, name]}
+                                    />
+                                    <Legend
+                                        verticalAlign="bottom"
+                                        height={32}
+                                        iconType="circle"
+                                        formatter={(val) => <span style={{ fontSize: '11px' }}>{val}</span>}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <NoDataChartBox>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Belum ada data Browser (0 klik)</span>
+                            </NoDataChartBox>
+                        )}
                     </EnterpriseCard>
 
                     {/* Vertical Bar: Daily Active Clicks (14 Days) */}
@@ -439,7 +467,7 @@ export default function EnterpriseDashboard({ initialData }) {
                         </CardHeader>
                         <ResponsiveContainer width="100%" height={210}>
                             <BarChart data={data?.dailyTrends || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
                                 <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
                                 <Tooltip
@@ -465,12 +493,12 @@ export default function EnterpriseDashboard({ initialData }) {
                                 data={data?.top10Links || []}
                                 margin={{ top: 5, right: 20, left: 10, bottom: 0 }}
                             >
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(148, 163, 184, 0.15)" />
                                 <XAxis type="number" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                                 <YAxis
                                     type="category"
                                     dataKey="title"
-                                    stroke="#475569"
+                                    stroke="currentColor"
                                     fontSize={11}
                                     tickLine={false}
                                     axisLine={false}
@@ -492,7 +520,7 @@ export default function EnterpriseDashboard({ initialData }) {
                         </CardHeader>
                         <ResponsiveContainer width="100%" height={260}>
                             <BarChart data={data?.dayOfWeekData || []} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.15)" />
                                 <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
                                 <Tooltip
@@ -502,7 +530,7 @@ export default function EnterpriseDashboard({ initialData }) {
                                     verticalAlign="bottom"
                                     height={28}
                                     iconType="circle"
-                                    formatter={(val) => <span style={{ color: '#64748b', fontSize: '11px' }}>{val}</span>}
+                                    formatter={(val) => <span style={{ fontSize: '11px' }}>{val}</span>}
                                 />
                                 <Bar dataKey="Mobile" stackId="a" fill={DEVICE_COLORS.Mobile} radius={[0, 0, 0, 0]} />
                                 <Bar dataKey="Desktop" stackId="a" fill={DEVICE_COLORS.Desktop} radius={[0, 0, 0, 0]} />
@@ -517,32 +545,38 @@ export default function EnterpriseDashboard({ initialData }) {
                     <CardHeader>
                         <CardTitle>Recent Click Logs</CardTitle>
                     </CardHeader>
-                    <TableScrollWrap>
-                        <CleanTable>
-                            <thead>
-                                <tr>
-                                    <th>Waktu</th>
-                                    <th>Tautan</th>
-                                    <th>OS</th>
-                                    <th>Browser</th>
-                                    <th>Device</th>
-                                    <th>IP Visitor</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(data?.recentLogs || []).map((log, i) => (
-                                    <tr key={log.id || i}>
-                                        <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{log.date} • {log.time}</td>
-                                        <td style={{ fontWeight: '600' }}>{log.title}</td>
-                                        <td><TagBadge>{log.os}</TagBadge></td>
-                                        <td><TagBadge>{log.browser}</TagBadge></td>
-                                        <td><TagBadge>{log.device}</TagBadge></td>
-                                        <td style={{ color: '#94a3b8', fontFamily: 'monospace' }}>{log.ip}</td>
+                    {(data?.recentLogs || []).length > 0 ? (
+                        <TableScrollWrap>
+                            <CleanTable>
+                                <thead>
+                                    <tr>
+                                        <th>Waktu</th>
+                                        <th>Tautan</th>
+                                        <th>OS</th>
+                                        <th>Browser</th>
+                                        <th>Device</th>
+                                        <th>IP Visitor</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </CleanTable>
-                    </TableScrollWrap>
+                                </thead>
+                                <tbody>
+                                    {(data?.recentLogs || []).map((log, i) => (
+                                        <tr key={log.id || i}>
+                                            <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{log.date} • {log.time}</td>
+                                            <td style={{ fontWeight: '600' }}>{log.title}</td>
+                                            <td><TagBadge>{log.os}</TagBadge></td>
+                                            <td><TagBadge>{log.browser}</TagBadge></td>
+                                            <td><TagBadge>{log.device}</TagBadge></td>
+                                            <td style={{ color: '#94a3b8', fontFamily: 'monospace' }}>{log.ip}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </CleanTable>
+                        </TableScrollWrap>
+                    ) : (
+                        <NoDataChartBox style={{ padding: '24px 16px' }}>
+                            <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Belum ada riwayat klik pengunjung tercatat di database (0 klik).</p>
+                        </NoDataChartBox>
+                    )}
                 </EnterpriseCard>
 
                 {/* ROW 7: Full Link Management (CRUD Table) */}
@@ -782,7 +816,6 @@ export async function getServerSideProps(context) {
 
     try {
         const initialData = await getDashboardAggregations();
-        // Convert dates/ObjectIds to JSON safe primitives
         const serialized = JSON.parse(JSON.stringify(initialData));
         return {
             props: {
@@ -799,7 +832,7 @@ export async function getServerSideProps(context) {
     }
 }
 
-// Styled Components (Enterprise White Cards & Subtle Borders)
+// Styled Components
 const CenterLoading = styled.div`
   min-height: 100vh;
   display: flex;
@@ -952,8 +985,8 @@ const SignOutIconButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 6px;
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
@@ -1104,6 +1137,18 @@ const CardTitle = styled.h2`
   margin: 0;
 `;
 
+const NoDataChartBox = styled.div`
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: ${({ theme }) => theme.text.secondary};
+  font-size: 12px;
+  text-align: center;
+`;
+
 const TableHeaderRow = styled.div`
   display: flex;
   align-items: center;
@@ -1121,7 +1166,7 @@ const FilterGroup = styled.div`
 `;
 
 const SearchBox = styled.input`
-  padding: 5px 9px;
+  padding: 6px 10px;
   border-radius: 6px;
   font-size: 12px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
@@ -1136,7 +1181,7 @@ const SearchBox = styled.input`
 `;
 
 const SelectBox = styled.select`
-  padding: 5px 9px;
+  padding: 6px 10px;
   border-radius: 6px;
   font-size: 12px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
