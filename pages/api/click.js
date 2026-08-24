@@ -21,49 +21,50 @@ function parseUserAgentDetails(uaString) {
         device = "Tablet";
     }
 
-    const browser = result.browser?.name || "Other";
-    const os = result.os?.name || "Unknown";
+    return {
+        device,
+        browser: result.browser?.name || "Other",
+        os: result.os?.name || "Unknown"
+    };
+}
 
-    return { device, browser, os };
+function stripQueryParams(rawUrl) {
+    if (!rawUrl) return "";
+    try {
+        const parsed = new URL(rawUrl);
+        return parsed.origin + parsed.pathname;
+    } catch {
+        // If it's a relative path or malformed, strip after ?
+        return rawUrl.split("?")[0];
+    }
 }
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Method not allowed' });
+    // Permissive CORS — allow any origin
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+
+    if (req.method !== "POST") {
+        return res.status(405).json({ message: "Method not allowed" });
     }
 
     try {
-        const origin = req.headers.origin || '';
-        const referer = req.headers.referer || '';
-        const host = req.headers.host || '';
-
-        // Filter: Bypass tracking for localhost / 127.0.0.1 / development environment
-        const isLocalTraffic =
-            process.env.NODE_ENV === 'development' ||
-            origin.includes('localhost') ||
-            origin.includes('127.0.0.1') ||
-            referer.includes('localhost') ||
-            referer.includes('127.0.0.1') ||
-            host.includes('localhost') ||
-            host.includes('127.0.0.1');
-
-        if (isLocalTraffic) {
-            return res.status(200).json({
-                success: true,
-                bypassed: true,
-                message: "Tracking bypassed for localhost"
-            });
-        }
-
         const { linkId, url, title } = req.body || {};
-        const ua = req.headers['user-agent'] || '';
+        const ua = req.headers["user-agent"] || "";
         const { device, browser, os } = parseUserAgentDetails(ua);
-        const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+        const ip = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown";
+        const origin = req.headers.origin || "";
+        const referer = req.headers.referer || "";
 
         const db = await getDatabase();
         const now = new Date();
 
-        // 1. Increment link counter in 'links' collection
+        // Increment link counter
         if (linkId && ObjectId.isValid(linkId)) {
             await db.collection("links").updateOne(
                 { _id: new ObjectId(linkId) },
@@ -71,34 +72,35 @@ export default async function handler(req, res) {
             );
         } else if (title) {
             await db.collection("links").updateOne(
-                { title: title },
+                { title },
                 { $inc: { clicks: 1 } }
             );
         }
 
-        // 2. Record click event in both 'clicks' and 'click_logs' collections
+        // Record click log — strip query params from url for clean data
         const logData = {
             linkId: linkId || null,
             title: title || "Unknown Link",
-            url: url || "",
+            url: stripQueryParams(url),
             device,
             browser,
             os,
-            origin,
-            referer,
-            ip: typeof ip === 'string' ? ip.split(',')[0].trim() : 'unknown',
+            origin: stripQueryParams(origin),
+            referer: stripQueryParams(referer),
+            ip: typeof ip === "string" ? ip.split(",")[0].trim() : "unknown",
             timestamp: now,
-            dateString: now.toISOString().split('T')[0]
+            dateString: now.toISOString().split("T")[0]
         };
 
         await Promise.all([
-            db.collection("clicks").insertOne(logData),
-            db.collection("click_logs").insertOne(logData)
+            db.collection("clicks").insertOne({ ...logData }),
+            db.collection("click_logs").insertOne({ ...logData })
         ]);
 
-        return res.status(200).json({ success: true, message: "Click recorded successfully" });
+        return res.status(200).json({ success: true });
     } catch (error) {
         console.error("Click tracking error:", error);
-        return res.status(200).json({ success: false }); // Non-blocking
+        // Never block the frontend
+        return res.status(200).json({ success: false });
     }
 }
