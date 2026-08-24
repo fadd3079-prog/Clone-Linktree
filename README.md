@@ -1,262 +1,231 @@
-### v2 [mytiny.page](https://beta.mytiny.page) builder is here. Explore and go live in minutes
+# Fadd Links — Link Directory & Bio Hub
 
-----
+<p align="center">
+  <img src="public/avatar.png" alt="Mufaddhol" width="96" height="96" style="border-radius: 50%;" />
+</p>
 
-# My Tiny Page (Formely Nxt Lnk)
+<p align="center">
+  <strong>Clean, minimalist, Apple-inspired bio link directory for Mufaddhol (Fadd Graphics).</strong><br>
+  Built with Next.js, React, and Styled Components.
+</p>
 
-**Custom bio links for creatives who love coding. Made this first to use for my own weblinks vjy.me/lnk**
+<p align="center">
+  <a href="https://faddgraphics.my.id"><img src="https://img.shields.io/badge/Website-faddgraphics.my.id-blue.svg?style=flat-square" alt="Website" /></a>
+  <img src="https://img.shields.io/badge/Next.js-12.2.4-black.svg?style=flat-square&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-18.2.0-61dafb.svg?style=flat-square&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Styled--Components-5.3.5-db7093.svg?style=flat-square&logo=styled-components" alt="Styled Components" />
+  <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License" />
+</p>
 
-A perfect custom alternative for linktree, bio and other shortner platform. Check live version here [nxtlnk.xyz](https://nxtlnk.xyz)
+---
 
-Pull requests are always welcome. In case you want inspiration or new features on what to add, check out the issues for feature requests.
+## Overview
 
-Coffee fuels coding ☕️
+**Fadd Links** is a custom, high-performance link directory built as an elegant alternative to generic link-in-bio services. It serves as the official central hub for **Mufaddhol (Fadd Graphics)** to organize design portfolios, direct contact channels, personal branding, and featured product releases (such as **FaddDompet**).
 
+### ✨ Key Features
 
+- **Apple-Inspired Aesthetic**: Clean, border-focused cards, subtle micro-interactions, and refined typography.
+- **Dark & Light Mode**: Automatic system color scheme detection with seamless toggle integration.
+- **Featured Product Highlight**: High-contrast, prominent spotlight card for app releases (FaddDompet).
+- **Categorized Directory**: Structured links organized by priorities (Core Services, Contact, Releases, Media, Credentials, Support).
+- **Dynamic SEO & Open Graph**: Full meta tag, Twitter card, and social sharing preview optimization via `next-seo`.
+- **Zero Bloat**: Purged dead assets and unused dependencies, delivering an ultra-light production bundle.
 
-**Table of Contents**
+---
 
+## Tech Stack
 
+- **Framework**: [Next.js 12](https://nextjs.org/) (Pages Router with SSG/SSR)
+- **Library**: [React 18](https://react.dev/)
+- **Styling**: [Styled Components 5](https://styled-components.com/)
+- **SEO**: [Next-SEO](https://github.com/garmeeh/next-seo)
+- **Icons**: Custom sharp SVG vectors
 
+---
 
+## Project Structure
 
-- [Usage](#usage)
-- [Quick Start](#quick-start)
-- [Manual Setup](#manual-setup)
-- [Getting Started](#getting-started)
-- [Images](#images)
-- [Update Bio](#update-bio)
-  - [Add/Update](#update-bio)
-  - [Enable/Disable](#update-bio)
-  - [Featured Banner](#update-bio)
-- [Update Links](#update-links)
-  - [Enable/Disable](#update-links)
-  - [Add/Update](#update-links)
-- [Frontend](#frontend)
-- [SEO](#seo)
-- [Google Analytics](#google-analytics)
-- [Custom Domain](#custom-domain)
-- [Favicon](#favicon)
-- [Contributors](#contributors)
-
-## Usage
-
-`nxt-lnk` template used to create your custom bio link and self-host on Vercel or Netlify using your own domain. Need little understanding of code :) ☕
-
-Usually, you don't need to worry a lot about coding if you're just updating information in `BioData.js` and `LinkData.js`. To deep dive know more  [Next.js](https://nextjs.org/docs) and [React](https://reactjs.org/docs/getting-started.html) official documentaion.
-
-For customization used [styled components](https://styled-components.com/). If you want to customize styling you can [learn more here](https://styled-components.com/docs).
-
-**Template auto support dark-mode depending on system cofig.**
-
-## Quick Start
-
-[Deploy with Vercel](https://vercel.com/import/git?s=https://github.com/realvjy/nxt-lnk) [Deploy to Netlify](https://app.netlify.com/start/deploy?repository=https://github.com/realvjy/nxt-lnk)
-
-## Manual Setup
-
-Run the following command to create a new project with this template:
-
-```bash
-yarn create next-app your-app-name -e https://github.com/realvjy/nxt-lnk
-# or
-npx create-next-app your-app-name -e https://github.com/realvjy/nxt-lnk
+```text
+├── components/
+│   ├── Layout.js            # Main layout wrapper & background styling
+│   ├── ReusableStyles.js    # Core reusable styled components (Container)
+│   ├── Seo.js               # Dynamic Open Graph & meta tags handler
+│   ├── WebLinks.js          # Main link tree render engine & sections
+│   └── icons/
+│       └── index.js         # SVG avatar shapes and arrow icons
+├── data/
+│   ├── BioData.js           # Profile metadata, name, bio, and social handles
+│   └── LinksData.js         # Link database, categories, badges, and icons
+├── pages/
+│   ├── _app.js              # Custom Next.js App wrapper, ThemeProvider & SEO
+│   ├── _document.js         # HTML document skeleton with SSR font/style injection
+│   └── index.js             # Homepage entry point
+├── public/                  # Static assets (avatar, icons, favicons, preview)
+├── styles/
+│   ├── GlobalStyle.js       # CSS reset & Apple system font stack
+│   └── theme.config.js      # Light/Dark design tokens, borders, and gradients
+├── next-seo.config.js       # Default OpenGraph and SEO configuration
+└── package.json             # Project dependencies and npm scripts
 ```
+
+---
 
 ## Getting Started
 
-Use any editor to work on editing. I use [vscode](https://code.visualstudio.com/)
+### Prerequisites
 
-First, run the development server:
+- **Node.js**: `v18.x` or higher (`v20+` recommended)
+- **npm**: `v9.x` or higher
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+### Installation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/fadd3079-prog/Clone-Linktree.git
+   cd Clone-Linktree
+   ```
 
-**Important files to edit or update info**
-`data/BioData.js` All basic info update here
-`data/LinksData.js` Contain all the links
-`Components/WebLinks.js` UI and stylesheet
-`Components/icons/index.js` Contain all SVG icon compo
+2. **Install dependencies**:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
 
-You can start editing the page by modifying `data/BioData.js` and `data/LinksData.js`. The page auto-updates as you edit the file.
+3. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
 
-## Images
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-All images stored inside `public` folder of the project.
+---
 
-## Update Bio
+## Configuration & Customization
 
-**Example from** `BioData.js` :
+### 1. Profile Information (`data/BioData.js`)
 
-```jsx
+Edit `data/BioData.js` to change your name, bio, avatar, and footer information:
+
+```javascript
 const bioData = [
-    {
-        name: 'vijay verma',
-        username: '@realvjy',
-        url: 'https://vjy.me',
-        titleImg: true,
-        avatar: '/avatar.png',
-        nftAvatar: true,
-        description: 'A short description/bio about you goes here',
-        subdesc: 'This is secondary description. If you do not need, you can remove it',
-        newProductUrl: 'https://vjy.me/lnk',
-        newProduct: true,
-    },
+  {
+    name: 'Mufaddhol',
+    username: '@fadd.graphics',
+    url: 'https://faddgraphics.my.id',
+    avatar: '/avatar.png',
+    nftAvatar: true, // true = hexagon clip, false = oval clip
+    description: 'Design, Creative Media & Tech',
+    descShow: true,
+    subdesc: 'Portfolio • Business Inquiries • Products',
+    subdescShow: true,
+    author: 'Mufaddhol',
+    authorURL: 'https://faddgraphics.my.id',
+    footerText: '© ' + new Date().getFullYear() + ' Fadd Graphics. All rights reserved.'
+  }
 ];
 
 export default bioData;
 ```
 
-**Avatar**
-Just replace `avatar.png`. 200x200px will be good.
+### 2. Links & Categories (`data/LinksData.js`)
 
-**Hex/NFT avatar view**
-`nftAvatar: true` enable hex shape on avatar image.
-`nftAvatar: false` made it in oval shape.
+Add or modify links in `data/LinksData.js`:
 
-**Title**
-By default `titleImg: true` and it look for `title.svg`. Replace svg with logo **logo**. Make sure to use `title.svg`  name.
-
-**Featured banner**
-`newProductUrl` and `newProduct` used for getting featured banner. You can replace the image `newproduct.png`  with any design you like.
-
-`newProduct: true` show banner. Default is `true` make it false to hide.
-
-## Update Links
-
-**Example from** `LinksData.js` :
-
-```jsx
+```javascript
 const webLinks = [
-    // All social profile
-    {
-        title: 'Twitter',
-        url: 'https://twitter.com/realvjy',
-        type: 'social',
-        icon: '/twitter.svg',
-        on: true
-    },
-    ...
-    ...
-    
-    {
-        title: 'Instagram',
-        url: 'https://instagram.com/realvjy',
-        type: 'social',
-        icon: '/insta.svg',
-        on: true
-    }
+  // Top social bar icon
+  {
+    title: 'Instagram',
+    url: 'https://www.instagram.com/fadd.fadhol',
+    type: 'social',
+    icon: '/insta.svg',
+    on: true
+  },
+
+  // Highlighted release card
+  {
+    title: 'Download FaddDompet App',
+    badge: 'v1.3.0',
+    url: 'https://github.com/fadd3079-prog/faddompet/releases/tag/v1.3.0',
+    type: 'Featured Product & Release',
+    icon: '/download.svg',
+    featured: true,
+    on: true
+  },
+
+  // Standard directory card
+  {
+    title: 'Official Website',
+    url: 'https://faddgraphics.my.id/',
+    type: 'Core Services & Portfolio',
+    icon: '/web.svg',
+    on: true
+  }
 ];
+
 export default webLinks;
 ```
 
-**Enable/Disable Social Media**
-Find `type: social` and change `on:true|false`
+### 3. SEO & Social Previews (`next-seo.config.js`)
 
+Update your Open Graph details in `next-seo.config.js`:
 
-| Title         | on (default) |
-| ------------- | ------------ |
-| `Twitter`     | `true`       |
-| `Instagram`   | `true`       |
-| `Dribbble`    | `false`      |
-| `Medium`      | `false`      |
-| `Github`      | `true`       |
-| `Youtube`     | `false`      |
-| `Behance`     | `true`       |
-| `Figma`       | `true`       |
-| `Linkedin`    | `false`      |
-| `Mastodon`    | `false`      |
-| `Hive Social` | `false`      |
-| `Post.news`   | `false`      |
-
-
-Setting `on: true` show the social icon. 
-The social media icons are arranged in a single row at the top of the page below description. If you want to use as list, chagne type to `type: 'other'`
-
-**Add new Social Media link**
-create a new block by copying this
-
-```jsx
-    {
-        title: 'Social Name',
-        url: 'https://link.com/whateverurl',
-        type: 'social',
-        icon: '/newiconname.svg',
-        on: true
-    }
-```
-
-Update all info and make sure to add a `newiconname.svg` file in [public](#images) folder.
-Then you have to add new section to frontend `components/WebLinks.js`
-
-## Frontend
-
-All frontend customization done inside `components/WebLinks.js`. If you wante to update and add new section just look this file and update according to your need.
-
-**Update section**
-
-Look for Section codes. Like if you want to change `install` type to `featured` Update  the `type: 'featured'` in `LinkData.js` then update all `install` related code in `WebLinks.js` to `featured`
-
-```js
-// Collect all links filter by type - social, project, nft and other etc=
-// get data for install section
-const install = allLinks.filter((el) => {
-  return el.type === "install" && el.on
-});
-
-...
-...
-
-{/* Featured Section */ }
-<LinkSection>
-  <h3>{install[0].type}</h3>
-  {
-    install.map((i) => {
-      return (
-        <Link href={i.url} passHref key={i.title}>
-          <LinkBox>
-            <LinkTitle><img src={i.icon} style={{ filter: 'var(--img)' }} /> {i.title}</LinkTitle> <NewUp />
-          </LinkBox>
-        </Link>
-      )
-    })
+```javascript
+const defaultSEO = {
+  title: 'Mufaddhol - Fadd Graphics',
+  description: 'Design, creative media, and tech portfolio by Mufaddhol (Fadd Graphics)',
+  canonical: 'https://faddgraphics.my.id',
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    url: 'https://faddgraphics.my.id',
+    site_name: 'Fadd Graphics',
+    images: [
+      {
+        url: 'https://faddgraphics.my.id/preview.png',
+        width: 1200,
+        height: 630,
+        alt: 'Mufaddhol - Fadd Graphics'
+      }
+    ]
+  },
+  twitter: {
+    handle: '@faddgraphics',
+    site: '@faddgraphics',
+    cardType: 'summary_large_image'
   }
-</LinkSection>
-{/* End Featured Section */ }
+};
+
+export default defaultSEO;
 ```
 
-**Add New section**
+---
 
-Add new section with specific `type` in `Linkdata.js`. Then copy `LinkSection` Code to create new section in `WebLinks.js` file. Make sure to create get data of that section as well.
+## Production Build & Deployment
 
-## SEO
+### Build Locally
 
-Already added `next-seo`. All you have to do is `update next-seo.config.js` file. Make sure to add direct link of `preview.jpg`file, like - `https://vjy.me/preview.jpg`.
+```bash
+npm run build
+npm run start
+```
 
-## Google Analytics
+### Deploy to Vercel
 
-In Vercel, you can set this by going to your project, then Settings and finally [Environments Variables](https://vercel.com/docs/concepts/projects/environment-variables). To get GA 4 code `G-ZXX0000XXX` follow [these steps](https://support.google.com/analytics/answer/9304153?hl=en) 
+The fastest way to deploy your Next.js link directory is using [Vercel](https://vercel.com/):
 
+1. Push your repository to GitHub.
+2. Import the project in Vercel.
+3. Keep the default build settings (`next build`) and deploy.
 
+---
 
-## Custom Domain
+## License
 
-By default vercel give you a subdomain with your project name like - [nxtlnk.vercel.app](https:nxtlnk.vercel.app). But you can add own domain. 
+This project is open-source and available under the [MIT License](LICENSE.md).
 
-Vercel/Netlify give you option to add any domain to the deployed project like [vjy.me/lnk](https://vjy.me/lnk) or [nxtlnk.xyz](https://nxtlnk.xyz). All you have to do is follow official [Vercel documentaion](https://vercel.com/docs/concepts/projects/domains/add-a-domain) or [Netlify Documentaion](https://www.netlify.com/blog/2021/12/20/how-to-add-custom-domains-to-netlify-sites/)
+---
 
-## Favicon
-
-Create a `favicon.ico` file and place inside `public` folder. I use [favicon.io](https://favicon.io/favicon-converter/)
-
-## Contributors
-
-Created by [realvjy](https://twitter.com/realvjy). You are always welcome to share your feedback on twitter or any social media platform.
-
-If you want to contribute. Just create a pull request. 
-    
+<p align="center">
+  Crafted with care by <a href="https://faddgraphics.my.id"><strong>Mufaddhol (Fadd Graphics)</strong></a>
+</p>
