@@ -30,35 +30,30 @@ export default NextAuth({
                 try {
                     const db = await getDatabase();
 
-                    // Find admin by email or username
                     let admin = await db.collection("admins").findOne({
                         $or: [
                             { email: inputUser },
-                            { username: inputUser },
-                            { username: credentials.username.trim() }
+                            { username: inputUser }
                         ]
                     });
 
-                    // AUTO-SEED: If master credentials used but admin not found, create it now
+                    // Auto-seed: create master admin if not found and creds match
                     if (!admin && isMasterCreds) {
                         const hashedPassword = await bcrypt.hash(MASTER_PASSWORD, 12);
-                        const newAdmin = {
+                        await db.collection("admins").insertOne({
                             username: MASTER_USERNAME,
                             email: MASTER_EMAIL,
                             password: hashedPassword,
                             role: "admin",
                             brand: "Fadd Graphics",
-                            createdAt: new Date(),
-                            autoSeeded: true
-                        };
-
-                        await db.collection("admins").insertOne(newAdmin);
+                            createdAt: new Date()
+                        });
                         admin = await db.collection("admins").findOne({ email: MASTER_EMAIL });
                     }
 
                     if (admin) {
-                        const isPasswordValid = await bcrypt.compare(inputPass, admin.password);
-                        if (isPasswordValid || isMasterCreds) {
+                        const valid = await bcrypt.compare(inputPass, admin.password);
+                        if (valid || isMasterCreds) {
                             return {
                                 id: admin._id.toString(),
                                 name: admin.username || MASTER_USERNAME,
@@ -69,13 +64,13 @@ export default NextAuth({
                         }
                     }
                 } catch (dbError) {
-                    console.error("MongoDB Auth Error (Master Failsafe):", dbError.message);
+                    console.error("MongoDB auth error:", dbError.message);
                 }
 
-                // Master Admin Failsafe: allows login even if MongoDB is unreachable
+                // Failsafe: allow master creds even if DB is down
                 if (isMasterCreds) {
                     return {
-                        id: "master_admin_failsafe",
+                        id: "master_failsafe",
                         name: MASTER_USERNAME,
                         email: MASTER_EMAIL,
                         role: "admin",
