@@ -31,7 +31,7 @@ function MyApp({ Component, pageProps }) {
             <ThemeProvider theme={theme}>
                 <Head>
                     <meta content="width=device-width, initial-scale=1" name="viewport" />
-                    <link rel="icon" href="/favicon.ico" />
+                    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
                 </Head>
                 <GlobalStyle />
                 <Layout>
