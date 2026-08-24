@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getDatabase, ensureMasterAdmin } from "../../../lib/dbHelper";
+import { getDatabase } from "../../../lib/dbHelper";
 import bcrypt from "bcryptjs";
 
 const MASTER_EMAIL = "fadd3079@gmail.com";
@@ -23,19 +23,38 @@ export default NextAuth({
                 const inputUser = credentials.username.trim().toLowerCase();
                 const inputPass = credentials.password;
 
-                const isMasterCreds = (inputUser === MASTER_EMAIL.toLowerCase() || inputUser === MASTER_USERNAME.toLowerCase()) && inputPass === MASTER_PASSWORD;
+                const isMasterCreds =
+                    (inputUser === MASTER_EMAIL || inputUser === MASTER_USERNAME) &&
+                    inputPass === MASTER_PASSWORD;
 
                 try {
                     const db = await getDatabase();
-                    await ensureMasterAdmin(db);
 
-                    const admin = await db.collection("admins").findOne({
+                    // Find admin by email or username
+                    let admin = await db.collection("admins").findOne({
                         $or: [
                             { email: inputUser },
                             { username: inputUser },
                             { username: credentials.username.trim() }
                         ]
                     });
+
+                    // AUTO-SEED: If master credentials used but admin not found, create it now
+                    if (!admin && isMasterCreds) {
+                        const hashedPassword = await bcrypt.hash(MASTER_PASSWORD, 12);
+                        const newAdmin = {
+                            username: MASTER_USERNAME,
+                            email: MASTER_EMAIL,
+                            password: hashedPassword,
+                            role: "admin",
+                            brand: "Fadd Graphics",
+                            createdAt: new Date(),
+                            autoSeeded: true
+                        };
+
+                        await db.collection("admins").insertOne(newAdmin);
+                        admin = await db.collection("admins").findOne({ email: MASTER_EMAIL });
+                    }
 
                     if (admin) {
                         const isPasswordValid = await bcrypt.compare(inputPass, admin.password);
@@ -50,13 +69,13 @@ export default NextAuth({
                         }
                     }
                 } catch (dbError) {
-                    console.error("MongoDB Auth Notice (Bypassing with Master Failsafe):", dbError.message);
+                    console.error("MongoDB Auth Error (Master Failsafe):", dbError.message);
                 }
 
-                // Master Admin Failsafe (in case MongoDB SSL/TLS network handshake fails)
+                // Master Admin Failsafe: allows login even if MongoDB is unreachable
                 if (isMasterCreds) {
                     return {
-                        id: "master_admin_id",
+                        id: "master_admin_failsafe",
                         name: MASTER_USERNAME,
                         email: MASTER_EMAIL,
                         role: "admin",
@@ -71,7 +90,7 @@ export default NextAuth({
     secret: process.env.NEXTAUTH_SECRET || "faddgraphics_super_secret_jwt_key_2026",
     session: {
         strategy: "jwt",
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: 30 * 24 * 60 * 60,
     },
     callbacks: {
         async jwt({ token, user }) {
