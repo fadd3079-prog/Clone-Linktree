@@ -151,15 +151,15 @@ export default function AdminDashboard() {
 
             const data = await res.json();
             if (data.success) {
-                showToast(isEdit ? "Tautan berhasil diperbarui!" : "Tautan baru berhasil ditambahkan!");
+                showToast(isEdit ? "Tautan diperbarui" : "Tautan ditambahkan");
                 setModalOpen(false);
                 fetchDashboardData();
             } else {
-                alert(data.message || "Gagal menyimpan tautan.");
+                alert(data.message || "Gagal menyimpan.");
             }
         } catch (err) {
             console.error("Save error:", err);
-            alert("Terjadi kesalahan saat menyimpan.");
+            alert("Terjadi kesalahan.");
         } finally {
             setFormLoading(false);
         }
@@ -167,7 +167,6 @@ export default function AdminDashboard() {
 
     const handleToggleStatus = async (link) => {
         const newStatus = !link.on;
-        // Optimistic UI update
         setLinks(prev => prev.map(item => item._id === link._id ? { ...item, on: newStatus } : item));
 
         try {
@@ -176,11 +175,11 @@ export default function AdminDashboard() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ _id: link._id, on: newStatus })
             });
-            showToast(`Status tautan diubah ke ${newStatus ? 'Aktif' : 'Non-aktif'}`);
+            showToast(`Status: ${newStatus ? 'Aktif' : 'Non-aktif'}`);
             fetchDashboardData();
         } catch (err) {
             console.error("Toggle error:", err);
-            fetchDashboardData(); // Revert on failure
+            fetchDashboardData();
         }
     };
 
@@ -199,12 +198,12 @@ export default function AdminDashboard() {
             });
             const data = await res.json();
             if (data.success) {
-                showToast("Tautan berhasil dihapus.");
+                showToast("Tautan dihapus");
                 setDeleteModalOpen(false);
                 setLinkToDelete(null);
                 fetchDashboardData();
             } else {
-                alert(data.message || "Gagal menghapus tautan.");
+                alert(data.message || "Gagal menghapus.");
             }
         } catch (err) {
             console.error("Delete error:", err);
@@ -234,14 +233,14 @@ export default function AdminDashboard() {
     return (
         <>
             <Head>
-                <title>Admin Dashboard • Fadd Links</title>
+                <title>Admin Dashboard</title>
             </Head>
 
             <DashboardWrapper>
                 {/* Toast Notification */}
                 {toastMessage && (
                     <ToastNotification>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
                         <span>{toastMessage}</span>
@@ -251,25 +250,25 @@ export default function AdminDashboard() {
                 {/* Top Navigation Header */}
                 <NavHeader>
                     <HeaderBrand>
-                        <NavAvatar src="/avatar.png" alt="Fadd Graphics" />
+                        <NavAvatar src="/avatar.png" alt="Avatar" />
                         <div>
-                            <NavTitle>Fadd Dashboard</NavTitle>
-                            <NavSubtitle>Hai, {session?.user?.name || "Admin"} • {session?.user?.brand || "Fadd Graphics"}</NavSubtitle>
+                            <NavTitle>Dashboard</NavTitle>
+                            <NavSubtitle>{session?.user?.name || "Admin"}</NavSubtitle>
                         </div>
                     </HeaderBrand>
 
                     <NavActions>
-                        <ActionButton href="/" target="_blank" rel="noreferrer" title="Lihat Web Publik">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <ActionButton href="/" target="_blank" rel="noreferrer" title="Lihat Web">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                                 <polyline points="15 3 21 3 21 9"></polyline>
                                 <line x1="10" y1="14" x2="21" y2="3"></line>
                             </svg>
-                            <span>Lihat Web</span>
+                            <span>Web</span>
                         </ActionButton>
 
                         <AddBtn onClick={openAddModal}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
@@ -277,7 +276,7 @@ export default function AdminDashboard() {
                         </AddBtn>
 
                         <SignOutBtn onClick={() => signOut({ callbackUrl: "/admin/login" })} title="Keluar">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                 <polyline points="16 17 21 12 16 7"></polyline>
                                 <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -286,13 +285,13 @@ export default function AdminDashboard() {
                     </NavActions>
                 </NavHeader>
 
-                {/* Top Metrics Cards */}
+                {/* Metrics Cards */}
                 <MetricsGrid>
                     <MetricCard>
                         <MetricTopRow>
                             <MetricLabel>Total Klik</MetricLabel>
                             <MetricIconWrapper color="#2563eb">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M15 3h6v6"></path>
                                     <path d="M10 14L21 3"></path>
                                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -300,66 +299,59 @@ export default function AdminDashboard() {
                             </MetricIconWrapper>
                         </MetricTopRow>
                         <MetricValue>{stats?.metrics?.totalClicks ?? 0}</MetricValue>
-                        <MetricSubtext>Akumulasi pengunjung ke semua tautan</MetricSubtext>
                     </MetricCard>
 
                     <MetricCard>
                         <MetricTopRow>
                             <MetricLabel>Tautan Aktif</MetricLabel>
                             <MetricIconWrapper color="#10b981">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                                 </svg>
                             </MetricIconWrapper>
                         </MetricTopRow>
                         <MetricValue>{stats?.metrics?.activeLinks ?? 0} <small>/ {stats?.metrics?.totalLinks ?? 0}</small></MetricValue>
-                        <MetricSubtext>{stats?.metrics?.inactiveLinks ?? 0} tautan dinonaktifkan</MetricSubtext>
                     </MetricCard>
 
                     <MetricCard>
                         <MetricTopRow>
-                            <MetricLabel>Kategori Tautan</MetricLabel>
+                            <MetricLabel>Kategori</MetricLabel>
                             <MetricIconWrapper color="#7c3aed">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                                 </svg>
                             </MetricIconWrapper>
                         </MetricTopRow>
                         <MetricValue>{stats?.metrics?.totalCategories ?? 0}</MetricValue>
-                        <MetricSubtext>Grup navigasi terstruktur</MetricSubtext>
                     </MetricCard>
 
                     <MetricCard>
                         <MetricTopRow>
                             <MetricLabel>Tautan Teratas</MetricLabel>
                             <MetricIconWrapper color="#ec4899">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                                 </svg>
                             </MetricIconWrapper>
                         </MetricTopRow>
-                        <MetricValue style={{ fontSize: '18px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        <MetricValue style={{ fontSize: '17px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                             {stats?.metrics?.topLink?.title || "-"}
                         </MetricValue>
                         <MetricSubtext>
-                            {stats?.metrics?.topLink?.clicks ?? 0} klik ({stats?.metrics?.topLink?.percentage ?? 0}% dari total)
+                            {stats?.metrics?.topLink?.clicks ?? 0} klik
                         </MetricSubtext>
                     </MetricCard>
                 </MetricsGrid>
 
-                {/* Advanced Charts Section */}
+                {/* Charts Section */}
                 <ChartsGrid>
-                    {/* Line / Area Chart: Click Trends */}
                     <ChartCard>
                         <ChartHeader>
-                            <div>
-                                <ChartTitle>Tren Performa Klik</ChartTitle>
-                                <ChartSubtitle>Aktivitas interaksi pengunjung dalam 7 hari terakhir</ChartSubtitle>
-                            </div>
+                            <ChartTitle>Tren Klik (7 Hari)</ChartTitle>
                         </ChartHeader>
                         <ChartContainer>
-                            <ResponsiveContainer width="100%" height={240}>
+                            <ResponsiveContainer width="100%" height={230}>
                                 <AreaChart data={stats?.clickTrends || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="clickGradient" x1="0" y1="0" x2="0" y2="1">
@@ -375,9 +367,9 @@ export default function AdminDashboard() {
                                             border: '1px solid #3f3f46',
                                             borderRadius: '8px',
                                             color: '#ffffff',
-                                            fontSize: '13px'
+                                            fontSize: '12px'
                                         }}
-                                        formatter={(val) => [`${val} Klik`, 'Interaksi']}
+                                        formatter={(val) => [`${val} Klik`, 'Klik']}
                                     />
                                     <Area
                                         type="monotone"
@@ -392,23 +384,19 @@ export default function AdminDashboard() {
                         </ChartContainer>
                     </ChartCard>
 
-                    {/* Donut Chart: Device Breakdown */}
                     <ChartCard>
                         <ChartHeader>
-                            <div>
-                                <ChartTitle>Distribusi Perangkat Pengunjung</ChartTitle>
-                                <ChartSubtitle>Perbandingan Mobile, Desktop, dan Tablet</ChartSubtitle>
-                            </div>
+                            <ChartTitle>Perangkat</ChartTitle>
                         </ChartHeader>
                         <ChartContainer>
-                            <ResponsiveContainer width="100%" height={240}>
+                            <ResponsiveContainer width="100%" height={230}>
                                 <PieChart>
                                     <Pie
                                         data={stats?.deviceBreakdown || []}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={85}
+                                        innerRadius={55}
+                                        outerRadius={80}
                                         paddingAngle={4}
                                         dataKey="value"
                                     >
@@ -422,13 +410,13 @@ export default function AdminDashboard() {
                                             border: '1px solid #3f3f46',
                                             borderRadius: '8px',
                                             color: '#ffffff',
-                                            fontSize: '13px'
+                                            fontSize: '12px'
                                         }}
-                                        formatter={(val, name) => [`${val} Pengunjung`, name]}
+                                        formatter={(val, name) => [`${val}`, name]}
                                     />
                                     <Legend
                                         verticalAlign="bottom"
-                                        height={36}
+                                        height={32}
                                         iconType="circle"
                                         formatter={(val) => <span style={{ color: '#86868b', fontSize: '12px' }}>{val}</span>}
                                     />
@@ -438,17 +426,14 @@ export default function AdminDashboard() {
                     </ChartCard>
                 </ChartsGrid>
 
-                {/* Link Management (CRUD Table) Section */}
+                {/* Link Management Table */}
                 <TableSectionCard>
                     <TableSectionHeader>
-                        <div>
-                            <SectionHeading>Manajemen Tautan</SectionHeading>
-                            <SectionDescription>Kelola data link, urutan prioritas, dan status visibilitas publik</SectionDescription>
-                        </div>
+                        <SectionHeading>Daftar Tautan</SectionHeading>
                         <FilterBar>
                             <SearchInput
                                 type="text"
-                                placeholder="Cari judul atau URL..."
+                                placeholder="Cari..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -466,14 +451,14 @@ export default function AdminDashboard() {
 
                     {filteredLinks.length === 0 ? (
                         <EmptyState>
-                            <p>Tidak ada tautan yang sesuai dengan filter.</p>
+                            <p>Tidak ada tautan ditemukan.</p>
                         </EmptyState>
                     ) : (
                         <TableResponsiveWrapper>
                             <LinksTable>
                                 <thead>
                                     <tr>
-                                        <th>Tautan & Ikon</th>
+                                        <th>Tautan</th>
                                         <th>Kategori</th>
                                         <th>Klik</th>
                                         <th>Status</th>
@@ -504,28 +489,28 @@ export default function AdminDashboard() {
                                                 <CategoryTag>{link.type}</CategoryTag>
                                             </td>
                                             <td>
-                                                <ClickBadge>{link.clicks || 0} klik</ClickBadge>
+                                                <ClickBadge>{link.clicks || 0}</ClickBadge>
                                             </td>
                                             <td>
                                                 <StatusToggleBtn
                                                     onClick={() => handleToggleStatus(link)}
                                                     active={link.on !== false}
-                                                    title="Klik untuk ubah status"
+                                                    title="Ubah status"
                                                 >
                                                     <span className="dot"></span>
-                                                    <span>{link.on !== false ? 'Aktif' : 'Non-aktif'}</span>
+                                                    <span>{link.on !== false ? 'Aktif' : 'Off'}</span>
                                                 </StatusToggleBtn>
                                             </td>
                                             <td>
                                                 <ActionButtonsCell>
-                                                    <EditBtn onClick={() => openEditModal(link)} title="Edit Tautan">
-                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <EditBtn onClick={() => openEditModal(link)} title="Edit">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                                         </svg>
                                                     </EditBtn>
-                                                    <DeleteBtn onClick={() => confirmDelete(link)} title="Hapus Tautan">
-                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <DeleteBtn onClick={() => confirmDelete(link)} title="Hapus">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                             <polyline points="3 6 5 6 21 6"></polyline>
                                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                                         </svg>
@@ -545,17 +530,17 @@ export default function AdminDashboard() {
                     <ModalOverlay onClick={() => setModalOpen(false)}>
                         <ModalCard onClick={(e) => e.stopPropagation()}>
                             <ModalHeader>
-                                <ModalTitle>{editingLink ? "Edit Tautan" : "Tambah Tautan Baru"}</ModalTitle>
+                                <ModalTitle>{editingLink ? "Edit Tautan" : "Tambah Tautan"}</ModalTitle>
                                 <CloseBtn onClick={() => setModalOpen(false)}>✕</CloseBtn>
                             </ModalHeader>
 
                             <ModalForm onSubmit={handleSaveLink}>
                                 <FormRow>
                                     <FormGroup style={{ flex: 2 }}>
-                                        <Label>Judul Tautan *</Label>
+                                        <Label>Judul *</Label>
                                         <Input
                                             type="text"
-                                            placeholder="Contoh: Official Website"
+                                            placeholder="Judul tautan"
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                             required
@@ -563,10 +548,10 @@ export default function AdminDashboard() {
                                     </FormGroup>
 
                                     <FormGroup style={{ flex: 1 }}>
-                                        <Label>Badge (Opsional)</Label>
+                                        <Label>Badge</Label>
                                         <Input
                                             type="text"
-                                            placeholder="v1.3.0 / New"
+                                            placeholder="v1.3.0"
                                             value={formData.badge}
                                             onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
                                         />
@@ -574,10 +559,10 @@ export default function AdminDashboard() {
                                 </FormRow>
 
                                 <FormGroup>
-                                    <Label>URL Tujuan *</Label>
+                                    <Label>URL *</Label>
                                     <Input
                                         type="url"
-                                        placeholder="https://faddgraphics.my.id"
+                                        placeholder="https://..."
                                         value={formData.url}
                                         onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                                         required
@@ -585,7 +570,7 @@ export default function AdminDashboard() {
                                 </FormGroup>
 
                                 <FormGroup>
-                                    <Label>Subtitle / Deskripsi (Opsional)</Label>
+                                    <Label>Subtitle</Label>
                                     <Input
                                         type="text"
                                         placeholder="Keterangan singkat"
@@ -596,7 +581,7 @@ export default function AdminDashboard() {
 
                                 <FormRow>
                                     <FormGroup style={{ flex: 1 }}>
-                                        <Label>Kategori / Grup</Label>
+                                        <Label>Kategori</Label>
                                         <Select
                                             value={formData.type}
                                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -608,13 +593,13 @@ export default function AdminDashboard() {
                                     </FormGroup>
 
                                     <FormGroup style={{ flex: 1 }}>
-                                        <Label>Pilihan Ikon</Label>
+                                        <Label>Ikon</Label>
                                         <Select
                                             value={formData.icon}
                                             onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                                         >
                                             {AVAILABLE_ICONS.map(ic => (
-                                                <option key={ic.value} value={ic.value}>{ic.label} ({ic.value})</option>
+                                                <option key={ic.value} value={ic.value}>{ic.label}</option>
                                             ))}
                                         </Select>
                                     </FormGroup>
@@ -627,7 +612,7 @@ export default function AdminDashboard() {
                                             checked={formData.featured}
                                             onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
                                         />
-                                        <span>Jadikan Tautan Unggulan (Hero / Featured Highlight)</span>
+                                        <span>Hero / Unggulan</span>
                                     </CheckboxLabel>
                                 </CheckboxRow>
 
@@ -638,7 +623,7 @@ export default function AdminDashboard() {
                                             checked={formData.on}
                                             onChange={(e) => setFormData({ ...formData, on: e.target.checked })}
                                         />
-                                        <span>Status Aktif (Tampilkan ke Publik)</span>
+                                        <span>Aktif</span>
                                     </CheckboxLabel>
                                 </CheckboxRow>
 
@@ -647,7 +632,7 @@ export default function AdminDashboard() {
                                         Batal
                                     </CancelBtn>
                                     <SaveBtn type="submit" disabled={formLoading}>
-                                        {formLoading ? "Menyimpan..." : "Simpan Tautan"}
+                                        {formLoading ? "Menyimpan..." : "Simpan"}
                                     </SaveBtn>
                                 </ModalFooter>
                             </ModalForm>
@@ -660,7 +645,7 @@ export default function AdminDashboard() {
                     <ModalOverlay onClick={() => setDeleteModalOpen(false)}>
                         <ConfirmCard onClick={(e) => e.stopPropagation()}>
                             <ConfirmIconWrap>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
                                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                                     <line x1="12" y1="9" x2="12" y2="13"></line>
                                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -668,12 +653,12 @@ export default function AdminDashboard() {
                             </ConfirmIconWrap>
                             <ConfirmTitle>Hapus Tautan?</ConfirmTitle>
                             <ConfirmText>
-                                Apakah Anda yakin ingin menghapus tautan <strong>&quot;{linkToDelete?.title}&quot;</strong>? Tindakan ini tidak dapat dibatalkan.
+                                Hapus <strong>&quot;{linkToDelete?.title}&quot;</strong>?
                             </ConfirmText>
                             <ConfirmActions>
                                 <CancelBtn onClick={() => setDeleteModalOpen(false)}>Batal</CancelBtn>
                                 <DeleteConfirmBtn onClick={handleDeleteLink} disabled={formLoading}>
-                                    {formLoading ? "Menghapus..." : "Ya, Hapus Tautan"}
+                                    {formLoading ? "Menghapus..." : "Hapus"}
                                 </DeleteConfirmBtn>
                             </ConfirmActions>
                         </ConfirmCard>
@@ -684,7 +669,7 @@ export default function AdminDashboard() {
     );
 }
 
-// Styled Components for Dashboard
+// Styled Components
 const CenterContainer = styled.div`
   min-height: 100vh;
   display: flex;
@@ -693,9 +678,9 @@ const CenterContainer = styled.div`
 `;
 
 const Spinner = styled.div`
-  width: 38px;
-  height: 38px;
-  border: 3px solid rgba(0, 0, 0, 0.1);
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid rgba(0, 0, 0, 0.1);
   border-top-color: #2563eb;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -706,89 +691,83 @@ const Spinner = styled.div`
 `;
 
 const DashboardWrapper = styled.div`
-  max-width: 1100px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 32px 20px 60px;
+  padding: 28px 18px 48px;
   width: 100%;
 
   @media screen and (max-width: 768px) {
-    padding: 20px 14px 40px;
+    padding: 16px 12px 32px;
   }
 `;
 
 const ToastNotification = styled.div`
   position: fixed;
-  top: 24px;
-  right: 24px;
+  top: 20px;
+  right: 20px;
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: #10b981;
   color: #ffffff;
-  padding: 12px 18px;
-  border-radius: 10px;
-  font-size: 13.5px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.2s ease;
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 `;
 
 const NavHeader = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 14px;
 `;
 
 const HeaderBrand = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 `;
 
 const NavAvatar = styled.img`
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   object-fit: cover;
-  border: 2px solid ${({ theme }) => theme.bg.cardBorder};
+  border: 1px solid ${({ theme }) => theme.bg.cardBorder};
 `;
 
 const NavTitle = styled.h1`
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
   color: ${({ theme }) => theme.text.primary};
   margin: 0;
 `;
 
 const NavSubtitle = styled.p`
-  font-size: 13px;
+  font-size: 12.5px;
   color: ${({ theme }) => theme.text.secondary};
-  margin: 2px 0 0;
+  margin: 0;
 `;
 
 const NavActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 `;
 
 const ActionButton = styled.a`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 14px;
-  border-radius: 9px;
-  font-size: 13px;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
   font-weight: 600;
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
@@ -797,30 +776,25 @@ const ActionButton = styled.a`
 
   &:hover {
     background: ${({ theme }) => theme.bg.cardHover};
-    border-color: ${({ theme }) => theme.bg.cardBorderHover};
   }
 `;
 
 const AddBtn = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: 9px;
-  font-size: 13px;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
   font-weight: 600;
   background: #2563eb;
   color: #ffffff;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease;
 
   &:hover {
     background: #1d4ed8;
-  }
-
-  &:active {
-    transform: scale(0.98);
   }
 `;
 
@@ -828,9 +802,9 @@ const SignOutBtn = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   color: #ef4444;
@@ -839,21 +813,20 @@ const SignOutBtn = styled.button`
 
   &:hover {
     background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.3);
   }
 `;
 
 const MetricsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 20px;
 
-  @media screen and (max-width: 900px) {
+  @media screen and (max-width: 860px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media screen and (max-width: 480px) {
+  @media screen and (max-width: 440px) {
     grid-template-columns: 1fr;
   }
 `;
@@ -861,8 +834,8 @@ const MetricsGrid = styled.div`
 const MetricCard = styled.div`
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 14px;
-  padding: 20px 18px;
+  border-radius: 12px;
+  padding: 16px 14px;
   box-shadow: ${({ theme }) => theme.bg.cardShadow};
   display: flex;
   flex-direction: column;
@@ -872,20 +845,20 @@ const MetricTopRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 `;
 
 const MetricLabel = styled.span`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: ${({ theme }) => theme.text.secondary};
 `;
 
 const MetricIconWrapper = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: ${({ color }) => `${color}18`};
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: ${({ color }) => `${color}15`};
   color: ${({ color }) => color};
   display: flex;
   align-items: center;
@@ -893,29 +866,29 @@ const MetricIconWrapper = styled.div`
 `;
 
 const MetricValue = styled.div`
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.6px;
+  letter-spacing: -0.5px;
   color: ${({ theme }) => theme.text.primary};
-  margin-bottom: 4px;
 
   small {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: ${({ theme }) => theme.text.secondary};
   }
 `;
 
 const MetricSubtext = styled.span`
-  font-size: 12px;
+  font-size: 11.5px;
   color: ${({ theme }) => theme.text.tertiary};
+  margin-top: 2px;
 `;
 
 const ChartsGrid = styled.div`
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 16px;
-  margin-bottom: 28px;
+  gap: 12px;
+  margin-bottom: 22px;
 
   @media screen and (max-width: 860px) {
     grid-template-columns: 1fr;
@@ -925,26 +898,20 @@ const ChartsGrid = styled.div`
 const ChartCard = styled.div`
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 16px;
   box-shadow: ${({ theme }) => theme.bg.cardShadow};
 `;
 
 const ChartHeader = styled.div`
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 `;
 
 const ChartTitle = styled.h2`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   color: ${({ theme }) => theme.text.primary};
-  margin: 0 0 2px;
-`;
-
-const ChartSubtitle = styled.p`
-  font-size: 12.5px;
-  color: ${({ theme }) => theme.text.secondary};
   margin: 0;
 `;
 
@@ -955,12 +922,12 @@ const ChartContainer = styled.div`
 const TableSectionCard = styled.div`
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 18px;
   box-shadow: ${({ theme }) => theme.bg.cardShadow};
 
   @media screen and (max-width: 768px) {
-    padding: 18px 14px;
+    padding: 14px 10px;
   }
 `;
 
@@ -968,41 +935,35 @@ const TableSectionHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 10px;
 `;
 
 const SectionHeading = styled.h2`
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
   color: ${({ theme }) => theme.text.primary};
-  margin: 0 0 2px;
-`;
-
-const SectionDescription = styled.p`
-  font-size: 13px;
-  color: ${({ theme }) => theme.text.secondary};
   margin: 0;
 `;
 
 const FilterBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 `;
 
 const SearchInput = styled.input`
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
   outline: none;
-  width: 200px;
+  width: 170px;
 
   &:focus {
     border-color: #2563eb;
@@ -1014,9 +975,9 @@ const SearchInput = styled.input`
 `;
 
 const CategorySelect = styled.select`
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
@@ -1037,20 +998,20 @@ const LinksTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 13.5px;
+  font-size: 13px;
 
   th {
-    padding: 10px 12px;
-    font-size: 12px;
+    padding: 8px 10px;
+    font-size: 11.5px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.3px;
     color: ${({ theme }) => theme.text.tertiary};
     border-bottom: 1px solid ${({ theme }) => theme.bg.cardBorder};
   }
 
   td {
-    padding: 14px 12px;
+    padding: 11px 10px;
     border-bottom: 1px solid ${({ theme }) => theme.bg.cardBorder};
     color: ${({ theme }) => theme.text.primary};
     vertical-align: middle;
@@ -1064,13 +1025,13 @@ const LinksTable = styled.table`
 const LinkItemCell = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 `;
 
 const IconPreviewWrap = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   display: flex;
@@ -1079,8 +1040,8 @@ const IconPreviewWrap = styled.div`
   flex-shrink: 0;
 
   img {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     filter: var(--img);
   }
 
@@ -1106,18 +1067,18 @@ const LinkItemTitle = styled.span`
 `;
 
 const BadgeTag = styled.span`
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 1.5px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
   background: rgba(37, 99, 235, 0.15);
   color: #2563eb;
 `;
 
 const FeaturedTag = styled.span`
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 1.5px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
   background: #f59e0b;
   color: #ffffff;
@@ -1125,14 +1086,14 @@ const FeaturedTag = styled.span`
 
 const LinkItemUrl = styled.a`
   display: block;
-  font-size: 12px;
+  font-size: 11.5px;
   color: ${({ theme }) => theme.text.secondary};
   text-decoration: none;
-  max-width: 280px;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-top: 2px;
+  margin-top: 1px;
 
   &:hover {
     text-decoration: underline;
@@ -1141,10 +1102,10 @@ const LinkItemUrl = styled.a`
 `;
 
 const CategoryTag = styled.span`
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 3px 6px;
+  border-radius: 5px;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   color: ${({ theme }) => theme.text.secondary};
@@ -1153,7 +1114,7 @@ const CategoryTag = styled.span`
 `;
 
 const ClickBadge = styled.span`
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #2563eb;
 `;
@@ -1161,20 +1122,20 @@ const ClickBadge = styled.span`
 const StatusToggleBtn = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 9px;
-  border-radius: 20px;
-  font-size: 12px;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 16px;
+  font-size: 11.5px;
   font-weight: 600;
   background: ${({ active }) => active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'};
   border: 1px solid ${({ active }) => active ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'};
   color: ${({ active }) => active ? '#10b981' : '#ef4444'};
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: opacity 0.15s ease;
 
   .dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     background: ${({ active }) => active ? '#10b981' : '#ef4444'};
   }
@@ -1188,12 +1149,12 @@ const ActionButtonsCell = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 5px;
 `;
 
 const EditBtn = styled.button`
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
@@ -1211,8 +1172,8 @@ const EditBtn = styled.button`
 `;
 
 const DeleteBtn = styled.button`
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
@@ -1225,15 +1186,14 @@ const DeleteBtn = styled.button`
 
   &:hover {
     background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.3);
   }
 `;
 
 const EmptyState = styled.div`
   text-align: center;
-  padding: 40px 20px;
+  padding: 32px 16px;
   color: ${({ theme }) => theme.text.secondary};
-  font-size: 14px;
+  font-size: 13px;
 `;
 
 // Modal Styles
@@ -1247,30 +1207,29 @@ const ModalOverlay = styled.div`
   justify-content: center;
   z-index: 1100;
   padding: 16px;
-  animation: fadeIn 0.15s ease;
 `;
 
 const ModalCard = styled.div`
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 18px;
+  border-radius: 16px;
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  padding: 26px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  padding: 22px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
 `;
 
 const ModalHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 `;
 
 const ModalTitle = styled.h3`
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: ${({ theme }) => theme.text.primary};
   margin: 0;
@@ -1280,10 +1239,9 @@ const CloseBtn = styled.button`
   background: none;
   border: none;
   color: ${({ theme }) => theme.text.secondary};
-  font-size: 16px;
+  font-size: 15px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 2px 6px;
 
   &:hover {
     color: ${({ theme }) => theme.text.primary};
@@ -1293,12 +1251,12 @@ const CloseBtn = styled.button`
 const ModalForm = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 `;
 
 const FormRow = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 10px;
 
   @media screen and (max-width: 480px) {
     flex-direction: column;
@@ -1308,20 +1266,20 @@ const FormRow = styled.div`
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   text-align: left;
 `;
 
 const Label = styled.label`
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   color: ${({ theme }) => theme.text.primary};
 `;
 
 const Input = styled.input`
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 13.5px;
+  padding: 9px 11px;
+  border-radius: 7px;
+  font-size: 13px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
@@ -1333,9 +1291,9 @@ const Input = styled.input`
 `;
 
 const Select = styled.select`
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 9px 11px;
+  border-radius: 7px;
+  font-size: 12.5px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
@@ -1344,20 +1302,20 @@ const Select = styled.select`
 `;
 
 const CheckboxRow = styled.div`
-  padding: 4px 0;
+  padding: 2px 0;
 `;
 
 const CheckboxLabel = styled.label`
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 7px;
+  font-size: 12.5px;
   color: ${({ theme }) => theme.text.primary};
   cursor: pointer;
 
   input {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     cursor: pointer;
   }
 `;
@@ -1366,16 +1324,16 @@ const ModalFooter = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 14px;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid ${({ theme }) => theme.bg.cardBorder};
 `;
 
 const CancelBtn = styled.button`
-  padding: 9px 16px;
-  border-radius: 8px;
-  font-size: 13.5px;
+  padding: 8px 14px;
+  border-radius: 7px;
+  font-size: 13px;
   font-weight: 600;
   background: ${({ theme }) => theme.bg.primary};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
@@ -1388,9 +1346,9 @@ const CancelBtn = styled.button`
 `;
 
 const SaveBtn = styled.button`
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-size: 13.5px;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 13px;
   font-weight: 600;
   background: #2563eb;
   color: #ffffff;
@@ -1410,50 +1368,50 @@ const SaveBtn = styled.button`
 const ConfirmCard = styled.div`
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 18px;
+  border-radius: 16px;
   width: 100%;
-  max-width: 400px;
-  padding: 24px;
+  max-width: 360px;
+  padding: 20px;
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
 `;
 
 const ConfirmIconWrap = styled.div`
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: rgba(239, 68, 68, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px;
+  margin: 0 auto 10px;
 `;
 
 const ConfirmTitle = styled.h3`
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: ${({ theme }) => theme.text.primary};
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 `;
 
 const ConfirmText = styled.p`
-  font-size: 13px;
+  font-size: 12.5px;
   color: ${({ theme }) => theme.text.secondary};
-  line-height: 18px;
-  margin: 0 0 20px;
+  line-height: 17px;
+  margin: 0 0 16px;
 `;
 
 const ConfirmActions = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 `;
 
 const DeleteConfirmBtn = styled.button`
-  padding: 9px 16px;
-  border-radius: 8px;
-  font-size: 13.5px;
+  padding: 8px 14px;
+  border-radius: 7px;
+  font-size: 13px;
   font-weight: 600;
   background: #ef4444;
   color: #ffffff;

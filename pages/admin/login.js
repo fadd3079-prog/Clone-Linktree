@@ -24,7 +24,7 @@ export default function AdminLogin() {
         setErrorMsg("");
 
         if (!username.trim() || !password) {
-            setErrorMsg("Silakan masukkan username/email dan password.");
+            setErrorMsg("Masukkan username dan password.");
             return;
         }
 
@@ -43,7 +43,7 @@ export default function AdminLogin() {
             }
         } catch (err) {
             console.error("Login error:", err);
-            setErrorMsg("Terjadi kesalahan sistem. Silakan coba lagi.");
+            setErrorMsg("Terjadi kesalahan sistem.");
         } finally {
             setLoading(false);
         }
@@ -60,19 +60,18 @@ export default function AdminLogin() {
     return (
         <>
             <Head>
-                <title>Admin Login • Fadd Links</title>
+                <title>Login • Admin</title>
             </Head>
             <LoginWrapper>
                 <LoginCard>
                     <BrandHeader>
-                        <AvatarImg src="/avatar.png" alt="Fadd Graphics" />
-                        <BrandTitle>Fadd Admin Portal</BrandTitle>
-                        <BrandSubtitle>Masuk untuk mengelola tautan dan melihat analitik</BrandSubtitle>
+                        <AvatarImg src="/avatar.png" alt="Fadd" />
+                        <BrandTitle>Admin Portal</BrandTitle>
                     </BrandHeader>
 
                     {errorMsg && (
                         <ErrorAlert>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
                                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -110,17 +109,17 @@ export default function AdminLogin() {
                             {loading ? (
                                 <BtnLoadingWrap>
                                     <MiniSpinner />
-                                    <span>Memverifikasi...</span>
+                                    <span>Memproses...</span>
                                 </BtnLoadingWrap>
                             ) : (
-                                "Masuk ke Dashboard"
+                                "Masuk"
                             )}
                         </SubmitBtn>
                     </Form>
 
                     <FooterNote>
                         <a href="/" target="_blank" rel="noreferrer">
-                            ← Kembali ke Halaman Utama
+                            ← Kembali ke Web
                         </a>
                     </FooterNote>
                 </LoginCard>
@@ -137,9 +136,9 @@ const CenterContainer = styled.div`
 `;
 
 const Spinner = styled.div`
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(0, 0, 0, 0.1);
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid rgba(0, 0, 0, 0.1);
   border-top-color: #2563eb;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -150,8 +149,8 @@ const Spinner = styled.div`
 `;
 
 const MiniSpinner = styled.div`
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #ffffff;
   border-radius: 50%;
@@ -179,17 +178,16 @@ const LoginWrapper = styled.div`
 
 const LoginCard = styled.div`
   width: 100%;
-  max-width: 420px;
+  max-width: 380px;
   background: ${({ theme }) => theme.bg.card};
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
-  border-radius: 20px;
-  padding: 36px 28px;
+  border-radius: 18px;
+  padding: 32px 24px;
   box-shadow: ${({ theme }) => theme.bg.cardShadow};
-  transition: all 0.2s ease;
 
   @media screen and (max-width: 480px) {
-    padding: 28px 20px;
-    border-radius: 16px;
+    padding: 24px 18px;
+    border-radius: 14px;
   }
 `;
 
@@ -198,44 +196,38 @@ const BrandHeader = styled.div`
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 `;
 
 const AvatarImg = styled.img`
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   object-fit: cover;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   border: 2px solid ${({ theme }) => theme.bg.cardBorder};
 `;
 
 const BrandTitle = styled.h1`
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
   color: ${({ theme }) => theme.text.primary};
-  margin-bottom: 4px;
-`;
-
-const BrandSubtitle = styled.p`
-  font-size: 13px;
-  color: ${({ theme }) => theme.text.secondary};
-  line-height: 18px;
+  margin: 0;
 `;
 
 const ErrorAlert = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   color: #ef4444;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
   font-weight: 500;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 
   svg {
     flex-shrink: 0;
@@ -245,37 +237,35 @@ const ErrorAlert = styled.div`
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   text-align: left;
 `;
 
 const Label = styled.label`
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  letter-spacing: -0.1px;
   color: ${({ theme }) => theme.text.primary};
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
   border: 1px solid ${({ theme }) => theme.bg.cardBorder};
   background: ${({ theme }) => theme.bg.primary};
   color: ${({ theme }) => theme.text.primary};
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
 
   &:focus {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   }
 
   &::placeholder {
@@ -285,24 +275,19 @@ const Input = styled.input`
 
 const SubmitBtn = styled.button`
   width: 100%;
-  margin-top: 8px;
-  padding: 13px 16px;
-  border-radius: 10px;
-  font-size: 14.5px;
+  margin-top: 6px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: -0.2px;
   background: #2563eb;
   color: #ffffff;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease;
 
   &:hover:not(:disabled) {
     background: #1d4ed8;
-  }
-
-  &:active:not(:disabled) {
-    transform: scale(0.99);
   }
 
   &:disabled {
@@ -312,14 +297,13 @@ const SubmitBtn = styled.button`
 `;
 
 const FooterNote = styled.div`
-  margin-top: 24px;
+  margin-top: 20px;
   text-align: center;
 
   a {
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 500;
     color: ${({ theme }) => theme.text.secondary};
-    transition: color 0.15s ease;
 
     &:hover {
       color: ${({ theme }) => theme.text.primary};
